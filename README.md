@@ -4,7 +4,7 @@ This project is a minimalist AddIn template for Autodesk Inventor in C# (.NET Fr
 
 ## Features
 - Builds to a DLL loaded by Inventor.
-- Adds a ribbon tab named "mca64launcher".
+- Adds a ribbon tab named "mca64Inventor".
 - Adds a button that displays a simple form when clicked.
 
 ## How to use
@@ -36,7 +36,7 @@ Ten projekt to minimalistyczny szablon dodatku (AddIn) dla Autodesk Inventor w C
 
 ## Funkcjonalność
 - Kompiluje się do DLL ładowanej przez Inventora.
-- Dodaje zakładkę (ribbon tab) o nazwie „mca64launcher”.
+- Dodaje zakładkę (ribbon tab) o nazwie „mca64Inventor”.
 - Dodaje przycisk, który po kliknięciu wyświetla prostą formę.
 
 ## Jak używać
