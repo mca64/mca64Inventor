@@ -1,0 +1,8 @@
+<AddIn>
+  <ClassId>{963308E2-D850-466D-A1C5-503A2E171552}</ClassId>
+  <ClientId>{963308E2-D850-466D-A1C5-503A2E171552}</ClientId>
+  <DisplayName>mca64Inventor AddIn</DisplayName>
+  <Description>Minimalistyczny szablon AddIn dla Inventora</Description>
+  <Assembly>mca64Inventor.dll</Assembly>
+  <LoadOnStartUp>1</LoadOnStartUp>
+</AddIn>
