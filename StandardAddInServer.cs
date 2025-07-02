@@ -22,10 +22,6 @@ namespace mca64Inventor // Przestrzeñ nazw grupuj¹ca klasy dodatku
         private UserInterfaceManager m_UIManager;
         // Kategoria poleceñ dla przycisku
         private CommandCategory m_Category;
-        // Zak³adka wst¹¿ki (nieu¿ywana bezpoœrednio)
-        private RibbonTab m_Tab;
-        // Panel wst¹¿ki (nieu¿ywany bezpoœrednio)
-        private RibbonPanel m_Panel;
         // Sta³e nazwy wewnêtrzne dla przycisku, zak³adki i panelu
         private const string ButtonInternalName = "mca64launcherButton";
         private const string TabInternalName = "mca64InventorTab";
@@ -94,10 +90,10 @@ namespace mca64Inventor // Przestrzeñ nazw grupuj¹ca klasy dodatku
                         stdole.IPictureDisp largeIcon = PictureDispConverter.ToIPictureDisp(Resource1.icon32 != null ? (System.Drawing.Image)Image.FromStream(new System.IO.MemoryStream(Resource1.icon32)) : null);
                         // Dodaj definicjê przycisku do CommandManager
                         m_ButtonDef = oInventorApp.CommandManager.ControlDefinitions.AddButtonDefinition(
-                            "Poka¿ formê", ButtonInternalName,
+                            "Grawerowanie", ButtonInternalName,
                             CommandTypesEnum.kShapeEditCmdType,
                             "{963308E2-D850-466D-A1C5-503A2E171552}",
-                            "Wyœwietl przyk³adow¹ formê64", "Pokazuje okno.", smallIcon, largeIcon, ButtonDisplayEnum.kDisplayTextInLearningMode);
+                            "Uruchom grawerowanie czêœci zespo³u", "Wykonuje grawerowanie i eksport IGES.", smallIcon, largeIcon, ButtonDisplayEnum.kDisplayTextInLearningMode);
                         // Pod³¹cz obs³ugê klikniêcia przycisku
                         m_ButtonDef.OnExecute += new ButtonDefinitionSink_OnExecuteEventHandler(OnButtonExecute);
                     }
@@ -134,8 +130,6 @@ namespace mca64Inventor // Przestrzeñ nazw grupuj¹ca klasy dodatku
             m_ButtonDef = null;
             m_UIManager = null;
             m_Category = null;
-            m_Tab = null;
-            m_Panel = null;
             oInventorApp = null;
             GC.Collect(); // Wymuœ oczyszczanie pamiêci
             GC.WaitForPendingFinalizers();

@@ -1,31 +1,31 @@
-using System.Windows.Forms; // Importuje klasy do obs³ugi okienek i kontrolek Windows Forms
+using System;
+using System.Windows.Forms;
 
-namespace mca64Inventor // Przestrzeñ nazw grupuj¹ca klasy dodatku
+namespace mca64Inventor
 {
-    /// <summary>
-    /// G³ówna forma (okno) wyœwietlana po klikniêciu przycisku w Inventorze.
-    /// </summary>
-    public class MainForm : Form
+    public partial class MainForm : Form
     {
-        /// <summary>
-        /// Konstruktor ustawia tytu³, rozmiar i dodaje etykietê do okna.
-        /// </summary>
         public MainForm()
         {
-            // Ustaw tytu³ okna
-            this.Text = "mca64launcher";
-            // Ustaw szerokoœæ i wysokoœæ okna
-            this.Width = 800;
-            this.Height = 400;
-            // Utwórz etykietê z tekstem i wyœrodkuj j¹
-            var label = new Label
-            {
-                Text = "To jest przyk³adowa forma64.",
-                Dock = DockStyle.Fill, // Etykieta zajmuje ca³e okno
-                TextAlign = System.Drawing.ContentAlignment.MiddleCenter // Wyœrodkowanie tekstu
-            };
-            // Dodaj etykietê do okna
-            this.Controls.Add(label);
+            InitializeComponent();
+            // Ustaw rozmiar formy na 3/4 ekranu
+            var screen = Screen.PrimaryScreen.WorkingArea;
+            this.Width = (int)(screen.Width * 0.75);
+            this.Height = (int)(screen.Height * 0.75);
+            this.StartPosition = FormStartPosition.CenterScreen;
+            // Ustaw przycisk na samym dole, na ca³¹ szerokoœæ
+            buttonGrawerowanie.Width = this.ClientSize.Width - 40;
+            buttonGrawerowanie.Left = 20;
+            buttonGrawerowanie.Top = this.ClientSize.Height - buttonGrawerowanie.Height - 20;
+            buttonGrawerowanie.Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom;
+        }
+
+        private void buttonGrawerowanie_Click(object sender, EventArgs e)
+        {
+            this.Hide(); // Ukryj formê przed rozpoczêciem grawerowania
+            var logic = new Grawerowanie();
+            logic.DoSomething();
+            this.Close(); // Zamknij formê po zakoñczeniu
         }
     }
 }

@@ -1,54 +1,56 @@
-# mca64Inventor AddIn Template
+# mca64Inventor AddIn
 
-This project is a minimalist AddIn template for Autodesk Inventor in C# (.NET Framework 4.8).
+## English
 
-## Features
-- Builds to a DLL loaded by Inventor.
-- Adds a ribbon tab named "mca64Inventor".
-- Adds a button that displays a simple form when clicked.
+### Functionality
+- Compiles to a DLL loaded by Autodesk Inventor as an AddIn.
+- Adds a ribbon tab named "mca64Inventor" with a panel and a button "Grawerowanie".
+- When the button is clicked, a form is shown. After confirmation, the add-in processes the active assembly:
+  - Engraves all parts (with user property "Grawer") in the assembly.
+  - Exports engraved parts to IGES format in a subfolder named IGES in the assembly directory.
+- The add-in works with Autodesk Inventor and requires .NET Framework 4.8.
 
-## How to use
-1. Build the project in Visual Studio (requires .NET Framework 4.8, references to Autodesk Inventor libraries).
-2. Register the DLL with `regasm /codebase mca64Inventor.dll` (as administrator).
-3. Add a `.addin` manifest file to the Inventor AddIns folder (see below).
-4. Start Inventor – the AddIn will appear in the AddIns list.
+### How to use
+1. Build the project in Visual Studio (requires .NET Framework 4.8 and Autodesk Inventor references).
+2. Register the DLL using `regasm /codebase mca64Inventor.dll` (as administrator).
+3. Add a `.addin` manifest file to Inventor's AddIns folder (see below).
+4. Start Inventor – the AddIn will appear in the Add-Ins list.
 
-## Example `.addin` manifest file
-Create a file `mca64Inventor.addin` in the folder:
-`C:\Users\<YourName>\AppData\Roaming\Autodesk\Inventor <Version>\Addins\`
-<AddIn>
+#### Example `.addin` manifest file
+Create `mca64Inventor.addin` in:
+`C:\Users\<YourName>\AppData\Roaming\Autodesk\Inventor <Version>\Addins\`<AddIn>
   <ClassId>{963308E2-D850-466D-A1C5-503A2E171552}</ClassId>
   <ClientId>{963308E2-D850-466D-A1C5-503A2E171552}</ClientId>
   <DisplayName>mca64Inventor AddIn</DisplayName>
-  <Description>Minimalist AddIn template for Inventor</Description>
+  <Description>Minimalistic AddIn template for Inventor</Description>
   <Assembly>mca64Inventor.dll</Assembly>
   <LoadOnStartUp>1</LoadOnStartUp>
 </AddIn>
-## Development
-- Add your own logic in classes in the `mca64Inventor` namespace.
-- Add your own buttons, panels, event handling.
+### Development
+- Extend your logic in the `mca64Inventor` namespace.
+- Add your own buttons, panels, and event handling as needed.
 
 ---
 
-# mca64Inventor AddIn Template
+## Polski
 
-Ten projekt to minimalistyczny szablon dodatku (AddIn) dla Autodesk Inventor w C# (.NET Framework 4.8).
+### Funkcjonalność
+- Kompiluje się do DLL ładowanej przez Autodesk Inventor jako dodatek (AddIn).
+- Dodaje zakładkę "mca64Inventor" z panelem i przyciskiem "Grawerowanie".
+- Po kliknięciu przycisku wyświetlana jest forma. Po potwierdzeniu dodatek przetwarza aktywny zespół:
+  - Graweruje wszystkie części (z właściwością użytkownika "Grawer") w zespole.
+  - Eksportuje wygrawerowane części do formatu IGES w podfolderze IGES w katalogu zespołu.
+- Dodatek działa z Autodesk Inventor i wymaga .NET Framework 4.8.
 
-## Funkcjonalność
-- Kompiluje się do DLL ładowanej przez Inventora.
-- Dodaje zakładkę (ribbon tab) o nazwie „mca64Inventor”.
-- Dodaje przycisk, który po kliknięciu wyświetla prostą formę.
-
-## Jak używać
-1. Zbuduj projekt w Visual Studio (wymagany .NET Framework 4.8, referencje do bibliotek Autodesk Inventor).
+### Jak używać
+1. Zbuduj projekt w Visual Studio (wymagany .NET Framework 4.8, referencje do Autodesk Inventor).
 2. Zarejestruj DLL poleceniem `regasm /codebase mca64Inventor.dll` (jako administrator).
 3. Dodaj plik manifestu `.addin` do folderu AddIns Inventora (patrz poniżej).
-4. Uruchom Inventora – AddIn pojawi się na liście dodatków.
+4. Uruchom Inventora – dodatek pojawi się na liście dodatków.
 
-## Przykładowy plik manifestu `.addin`
+#### Przykładowy plik manifestu `.addin`
 Utwórz plik `mca64Inventor.addin` w folderze:
-`C:\Users\<TwojaNazwa>\AppData\Roaming\Autodesk\Inventor <Wersja>\Addins\`
-<AddIn>
+`C:\Users\<TwojaNazwa>\AppData\Roaming\Autodesk\Inventor <Wersja>\Addins\`<AddIn>
   <ClassId>{963308E2-D850-466D-A1C5-503A2E171552}</ClassId>
   <ClientId>{963308E2-D850-466D-A1C5-503A2E171552}</ClientId>
   <DisplayName>mca64Inventor AddIn</DisplayName>
@@ -56,9 +58,10 @@ Utwórz plik `mca64Inventor.addin` w folderze:
   <Assembly>mca64Inventor.dll</Assembly>
   <LoadOnStartUp>1</LoadOnStartUp>
 </AddIn>
-## Rozwijanie
-- Rozwijaj własną logikę w klasach w przestrzeni nazw `mca64Inventor`.
-- Dodawaj własne przyciski, panele, obsługę zdarzeń.
+### Rozwijanie
+- Rozwijaj własną logikę w przestrzeni nazw `mca64Inventor`.
+- Dodawaj własne przyciski, panele, obsługę zdarzeń według potrzeb.
 
 ---
-**Szablon przygotowany na bazie oryginalnego kodu.**
+
+**Template based on original code.**
