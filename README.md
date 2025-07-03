@@ -1,23 +1,22 @@
 # mca64Inventor AddIn
 
-## English
-
-### Functionality
+## Functionality
 - Compiles to a DLL loaded by Autodesk Inventor as an AddIn.
 - Adds a ribbon tab named "mca64Inventor" with a panel and a button "Grawerowanie".
 - When the button is clicked, a form is shown. After confirmation, the add-in processes the active assembly:
   - Engraves all parts (with user iProperties property "Grawer" as text) in the assembly.
   - Exports engraved parts to IGES format in a subfolder named IGES in the assembly directory.
+  - Generates thumbnails (screenshots) for all .ipt parts in the assembly and displays them in the UI.
 - The add-in works with Autodesk Inventor and requires .NET Framework 4.8.
 - The button uses icons: `icon16` (16x16 px) and `icon32` (32x32 px) from the project resources. You should add your own icons to the project resources for best appearance.
 
-### How to use
+## How to use
 1. Build the project in Visual Studio (requires .NET Framework 4.8 and Autodesk Inventor references).
 2. Register the DLL using `regasm /codebase mca64Inventor.dll` (as administrator).
 3. Add a `.addin` manifest file to Inventor's AddIns folder (see below).
 4. Start Inventor – the AddIn will appear in the Add-Ins list.
 
-#### Example `.addin` manifest file
+### Example `.addin` manifest file
 Create `mca64Inventor.addin` in:
 `C:\Users\<YourName>\AppData\Roaming\Autodesk\Inventor <Version>\Addins\`<AddIn>
   <ClassId>{963308E2-D850-466D-A1C5-503A2E171552}</ClassId>
@@ -27,44 +26,10 @@ Create `mca64Inventor.addin` in:
   <Assembly>mca64Inventor.dll</Assembly>
   <LoadOnStartUp>1</LoadOnStartUp>
 </AddIn>
-### Development
+## Development
 - Extend your logic in the `mca64Inventor` namespace.
 - Add your own buttons, panels, and event handling as needed.
 - To change the button icon, add your own `icon16` and `icon32` PNG files to the project resources (Properties/Resources.resx or Resource1.resx).
-
----
-
-## Polski
-
-### Funkcjonalność
-- Kompiluje się do DLL ładowanej przez Autodesk Inventor jako dodatek (AddIn).
-- Dodaje zakładkę "mca64Inventor" z panelem i przyciskiem "Grawerowanie".
-- Po kliknięciu przycisku wyświetlana jest forma. Po potwierdzeniu dodatek przetwarza aktywny zespół:
-  - Graweruje wszystkie części (z właściwością użytkownika iProperties "Grawer" jako tekst) w zespole.
-  - Eksportuje wygrawerowane części do formatu IGES w podfolderze IGES w katalogu zespołu.
-- Dodatek działa z Autodesk Inventor i wymaga .NET Framework 4.8.
-- Przycisk korzysta z ikon: `icon16` (16x16 px) i `icon32` (32x32 px) z zasobów projektu. Dodaj własne ikony do zasobów projektu, aby uzyskać najlepszy wygląd.
-
-### Jak używać
-1. Zbuduj projekt w Visual Studio (wymagany .NET Framework 4.8, referencje do Autodesk Inventor).
-2. Zarejestruj DLL poleceniem `regasm /codebase mca64Inventor.dll` (jako administrator).
-3. Dodaj plik manifestu `.addin` do folderu AddIns Inventora (patrz poniżej).
-4. Uruchom Inventora – dodatek pojawi się na liście dodatków.
-
-#### Przykładowy plik manifestu `.addin`
-Utwórz plik `mca64Inventor.addin` w folderze:
-`C:\Users\TwojaNazwa\AppData\Roaming\Autodesk\Inventor <Wersja>\Addins\`<AddIn>
-  <ClassId>{963308E2-D850-466D-A1C5-503A2E171552}</ClassId>
-  <ClientId>{963308E2-D850-466D-A1C5-503A2E171552}</ClientId>
-  <DisplayName>mca64Inventor AddIn</DisplayName>
-  <Description>Minimalistyczny szablon AddIn dla Inventora</Description>
-  <Assembly>mca64Inventor.dll</Assembly>
-  <LoadOnStartUp>1</LoadOnStartUp>
-</AddIn>
-### Rozwijanie
-- Rozwijaj własną logikę w przestrzeni nazw `mca64Inventor`.
-- Dodawaj własne przyciski, panele, obsługę zdarzeń według potrzeb.
-- Aby zmienić ikonę przycisku, dodaj własne pliki PNG `icon16` i `icon32` do zasobów projektu (Properties/Resources.resx lub Resource1.resx).
 
 ---
 

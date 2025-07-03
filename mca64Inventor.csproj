@@ -126,7 +126,6 @@
     <Compile Include="AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="ExampleLogic.cs" />
     <Compile Include="Grawerowanie.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
@@ -161,7 +160,6 @@
   <PropertyGroup>
     <PreBuildEvent>
     </PreBuildEvent>
-    <PostBuildEvent>
-    </PostBuildEvent>
+    <PostBuildEvent>start "" "C:\Program Files\Autodesk\Inventor 2016\Bin\Inventor.exe" "C:\$Vault\Projektowy\Główny\Astrus - Place zabaw\Projektowy\10.Prototypy\06.Inne\06.0156 Kosz\06.0156 Kosz.iam"</PostBuildEvent>
   </PropertyGroup>
 </Project>

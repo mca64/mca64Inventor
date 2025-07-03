@@ -50,5 +50,17 @@ namespace mca64Inventor // Przestrzeñ nazw grupuj¹ca klasy dodatku
             // Utwórz i zwróæ IPictureDisp
             return OleCreatePictureIndirect(ref pictdesc, ref iPictureDispGuid, true);
         }
+
+        /// <summary>
+        /// Konwertuje stdole.IPictureDisp na System.Drawing.Image (Bitmap).
+        /// </summary>
+        public static Image ToImage(stdole.IPictureDisp pictureDisp)
+        {
+            if (pictureDisp == null) return null;
+            // IPictureDisp.Handle to IntPtr do HBITMAP
+            IntPtr hBitmap = (IntPtr)pictureDisp.Handle;
+            if (hBitmap == IntPtr.Zero) return null;
+            return Image.FromHbitmap(hBitmap);
+        }
     }
 }

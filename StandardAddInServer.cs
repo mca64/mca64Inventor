@@ -142,7 +142,7 @@ namespace mca64Inventor // Przestrzeñ nazw grupuj¹ca klasy dodatku
         public void OnButtonExecute(NameValueMap context)
         {
             var form = new MainForm(); // Utwórz nowe okno
-            form.ShowDialog(); // Poka¿ okno jako modalne
+            form.ShowDialog(); // Poka¿ okno jako modalne (blokuje Inventora)
         }
 
         /// <summary>
