@@ -34,5 +34,17 @@ namespace mca64Inventor.Properties {
                 this["FontSize"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("true")]
+        public bool ClosePartsAfterEngraving {
+            get {
+                return ((bool)(this["ClosePartsAfterEngraving"]));
+            }
+            set {
+                this["ClosePartsAfterEngraving"] = value;
+            }
+        }
     }
 }

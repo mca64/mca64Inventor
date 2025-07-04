@@ -317,12 +317,22 @@ namespace mca64Inventor
                 EksportujDoIGES(czesc.SciezkaPliku, folderIGES, aplikacja);
                 if (zamykajCzesci)
                 {
-                    foreach (Document doc in aplikacja.Documents)
+                    // Zamknij wszystkie otwarte dokumenty typu PartDocument o tej œcie¿ce
+                    for (int i = aplikacja.Documents.Count; i >= 1; i--)
                     {
-                        if (string.Equals(doc.FullFileName, czesc.SciezkaPliku, StringComparison.OrdinalIgnoreCase))
+                        var doc = aplikacja.Documents[i];
+                        if (doc is PartDocument && string.Equals(doc.FullFileName, czesc.SciezkaPliku, StringComparison.OrdinalIgnoreCase))
                         {
-                            try { doc.Close(false); } catch { }
-                            break;
+                            try { doc.Close(false); } catch (Exception ex) {
+                                foreach (Form f in System.Windows.Forms.Application.OpenForms)
+                                {
+                                    if (f is MainForm mf)
+                                    {
+                                        mf.LogMessage($"B³¹d zamykania czêœci: {doc.FullFileName} - {ex.Message}");
+                                        break;
+                                    }
+                                }
+                            }
                         }
                     }
                 }

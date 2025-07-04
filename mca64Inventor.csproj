@@ -145,6 +145,7 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <None Include="Properties\Settings.settings" />
     <None Include="README.md" />
   </ItemGroup>
   <ItemGroup>

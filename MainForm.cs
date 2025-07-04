@@ -20,6 +20,7 @@ namespace mca64Inventor
         private static Dictionary<string, List<(string, Image, string)>> miniaturyPerAssembly = new Dictionary<string, List<(string, Image, string)>>();
         private static Dictionary<string, string> logPerAssembly = new Dictionary<string, string>();
         private static Dictionary<string, MainForm> openFormsPerAssembly = new Dictionary<string, MainForm>();
+        private static Dictionary<string, bool> closePartsPerAssembly = new Dictionary<string, bool>();
         private string currentAssemblyPath = null;
 
         public float GlobalFontSize
@@ -84,6 +85,16 @@ namespace mca64Inventor
         {
             // Ustaw œcie¿kê z³o¿enia na starcie
             currentAssemblyPath = assemblyPath;
+            // Przywróæ stan checkBoxCloseParts dla tego z³o¿enia
+            if (this.Controls["checkBoxCloseParts"] is CheckBox cbClose)
+            {
+                if (closePartsPerAssembly.TryGetValue(assemblyPath, out bool val))
+                    cbClose.Checked = val;
+                else if (Properties.Settings.Default["ClosePartsAfterEngraving_" + assemblyPath] != null)
+                    cbClose.Checked = (bool)Properties.Settings.Default["ClosePartsAfterEngraving_" + assemblyPath];
+                else
+                    cbClose.Checked = Properties.Settings.Default.ClosePartsAfterEngraving;
+            }
         }
 
         public static MainForm ShowForAssembly(string assemblyPath)
@@ -110,6 +121,16 @@ namespace mca64Inventor
             return form;
         }
 
+        protected override void OnLoad(EventArgs e)
+        {
+            base.OnLoad(e);
+            // Przywróæ ustawienie zamykania czêœci
+            if (this.Controls["checkBoxCloseParts"] is CheckBox cbClose)
+            {
+                cbClose.Checked = Properties.Settings.Default.ClosePartsAfterEngraving;
+            }
+        }
+
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
         {
             if (this.Controls["comboBoxFontSize"] is ComboBox cb)
@@ -117,17 +138,28 @@ namespace mca64Inventor
                 if (cb.SelectedItem is string selected && float.TryParse(selected.Replace(',', '.'), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float parsed) && parsed > 0)
                 {
                     Properties.Settings.Default.FontSize = parsed;
-                    Properties.Settings.Default.Save();
                     LogMessage($"[USTAWIENIA] Zapisano rozmiar czcionki przy zamykaniu okna: {parsed}");
                 }
                 else
                 {
                     cb.SelectedIndex = 0;
                     Properties.Settings.Default.FontSize = 1.0f;
-                    Properties.Settings.Default.Save();
                     LogMessage("[USTAWIENIA] Niepoprawny format rozmiaru czcionki przy zamykaniu okna. Ustawiono domyœlnie 1.0");
                 }
             }
+            // Zapisz ustawienie zamykania czêœci
+            if (this.Controls["checkBoxCloseParts"] is CheckBox cbClose)
+            {
+                Properties.Settings.Default.ClosePartsAfterEngraving = cbClose.Checked;
+                if (!string.IsNullOrEmpty(currentAssemblyPath))
+                {
+                    closePartsPerAssembly[currentAssemblyPath] = cbClose.Checked;
+                    // Zapisz indywidualnie dla z³o¿enia
+                    Properties.Settings.Default["ClosePartsAfterEngraving_" + currentAssemblyPath] = cbClose.Checked;
+                }
+                LogMessage($"[USTAWIENIA] Zapisano zamykanie czêœci: {cbClose.Checked}");
+            }
+            Properties.Settings.Default.Save();
         }
 
         private void PrepareDataGridView()
