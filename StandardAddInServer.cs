@@ -141,8 +141,16 @@ namespace mca64Inventor // Przestrzeñ nazw grupuj¹ca klasy dodatku
         /// <param name="context">Kontekst wywo³ania (nieu¿ywany)</param>
         public void OnButtonExecute(NameValueMap context)
         {
-            var form = new MainForm(); // Utwórz nowe okno
-            form.ShowDialog(); // Poka¿ okno jako modalne (blokuje Inventora)
+            var aplikacja = System.Runtime.InteropServices.Marshal.GetActiveObject("Inventor.Application") as Inventor.Application;
+            if (aplikacja != null && aplikacja.ActiveDocument is AssemblyDocument dokumentZespolu)
+            {
+                string assemblyPath = dokumentZespolu.FullFileName;
+                MainForm.ShowForAssembly(assemblyPath);
+            }
+            else
+            {
+                MessageBox.Show("Aktywne okno nie jest z³o¿eniem.", "B³¹d", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         /// <summary>

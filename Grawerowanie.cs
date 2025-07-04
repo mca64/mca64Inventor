@@ -288,6 +288,8 @@ namespace mca64Inventor
                 }
                 return;
             }
+            // Zapamiêtaj referencjê do z³o¿enia u¿ytego do grawerowania
+            var docToReactivate = dokumentZespolu;
             // POBIERZ ZAWSZE Z comboBoxFontSize
             float realFontSize = 1.0f;
             var culture = System.Globalization.CultureInfo.CurrentCulture;
@@ -340,6 +342,25 @@ namespace mca64Inventor
                     {
                         mf.LogMessage(logMsg);
                         break;
+                    }
+                }
+            }
+            // Po zakoñczeniu grawerowania wróæ do z³o¿enia u¿ytego do grawerowania
+            if (docToReactivate != null)
+            {
+                try
+                {
+                    docToReactivate.Activate();
+                }
+                catch (Exception ex)
+                {
+                    foreach (Form f in System.Windows.Forms.Application.OpenForms)
+                    {
+                        if (f is MainForm mf)
+                        {
+                            mf.LogMessage($"B³¹d podczas powrotu do zak³adki ze z³o¿eniem: {ex.Message}");
+                            break;
+                        }
                     }
                 }
             }

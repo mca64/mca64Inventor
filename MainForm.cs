@@ -19,6 +19,7 @@ namespace mca64Inventor
         private static Dictionary<string, int> fontSizeIndexPerAssembly = new Dictionary<string, int>();
         private static Dictionary<string, List<(string, Image, string)>> miniaturyPerAssembly = new Dictionary<string, List<(string, Image, string)>>();
         private static Dictionary<string, string> logPerAssembly = new Dictionary<string, string>();
+        private static Dictionary<string, MainForm> openFormsPerAssembly = new Dictionary<string, MainForm>();
         private string currentAssemblyPath = null;
 
         public float GlobalFontSize
@@ -77,6 +78,36 @@ namespace mca64Inventor
             dataGridViewParts.EditingControlShowing += DataGridViewParts_EditingControlShowing;
             comboBoxFonts.SelectedIndexChanged += ComboBoxFonts_SelectedIndexChanged;
             this.FormClosing += MainForm_FormClosing;
+        }
+
+        public MainForm(string assemblyPath) : this()
+        {
+            // Ustaw œcie¿kê z³o¿enia na starcie
+            currentAssemblyPath = assemblyPath;
+        }
+
+        public static MainForm ShowForAssembly(string assemblyPath)
+        {
+            if (string.IsNullOrEmpty(assemblyPath)) return null;
+            if (openFormsPerAssembly.TryGetValue(assemblyPath, out var existingForm))
+            {
+                if (!existingForm.IsDisposed)
+                {
+                    existingForm.WindowState = FormWindowState.Normal;
+                    existingForm.BringToFront();
+                    existingForm.Focus();
+                    return existingForm;
+                }
+                else
+                {
+                    openFormsPerAssembly.Remove(assemblyPath);
+                }
+            }
+            var form = new MainForm(assemblyPath);
+            openFormsPerAssembly[assemblyPath] = form;
+            form.FormClosed += (s, e) => openFormsPerAssembly.Remove(assemblyPath);
+            form.Show();
+            return form;
         }
 
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
