@@ -5,6 +5,7 @@ using System.IO;
 using System.Windows.Forms;
 using Inventor;
 using System.Linq;
+using System.Configuration;
 // Add aliases for ambiguous types
 using WinFormsTextBox = System.Windows.Forms.TextBox;
 using SysEnvironment = System.Environment;
@@ -15,6 +16,7 @@ namespace mca64Inventor
     {
         private float globalFontSize = 1.0f;
         private static Dictionary<string, int> fontIndexPerAssembly = new Dictionary<string, int>();
+        private static Dictionary<string, int> fontSizeIndexPerAssembly = new Dictionary<string, int>();
         private static Dictionary<string, List<(string, Image, string)>> miniaturyPerAssembly = new Dictionary<string, List<(string, Image, string)>>();
         private static Dictionary<string, string> logPerAssembly = new Dictionary<string, string>();
         private string currentAssemblyPath = null;
@@ -24,7 +26,7 @@ namespace mca64Inventor
             get
             {
                 float val = 1.0f;
-                if (this.Controls["textBoxFontSize"] is WinFormsTextBox tb && float.TryParse(tb.Text.Replace(',', '.'), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out float parsed) && parsed > 0)
+                if (this.Controls["comboBoxFontSize"] is ComboBox cb && cb.SelectedItem is string selected && float.TryParse(selected.Replace(',', '.'), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float parsed) && parsed > 0)
                     val = parsed;
                 return val;
             }
@@ -34,6 +36,12 @@ namespace mca64Inventor
         {
             InitializeComponent();
             AddFontComboBox();
+            // Dodaj obs³ugê comboBoxFontSize
+            if (this.Controls["comboBoxFontSize"] is ComboBox cbFontSize)
+            {
+                cbFontSize.SelectedIndexChanged += ComboBoxFontSize_SelectedIndexChanged;
+            }
+            // Odczytaj zapisan¹ wartoœæ rozmiaru czcionki
             var aplikacja = System.Runtime.InteropServices.Marshal.GetActiveObject("Inventor.Application") as Inventor.Application;
             if (aplikacja != null && aplikacja.ActiveDocument is AssemblyDocument dokumentZespolu)
             {
@@ -41,6 +49,9 @@ namespace mca64Inventor
                 // Restore font selection
                 if (fontIndexPerAssembly.TryGetValue(currentAssemblyPath, out int idx) && idx >= 0 && idx < comboBoxFonts.Items.Count)
                     comboBoxFonts.SelectedIndex = idx;
+                // Restore font size selection
+                if (fontSizeIndexPerAssembly.TryGetValue(currentAssemblyPath, out int idxSize) && idxSize >= 0 && idxSize < comboBoxFontSize.Items.Count)
+                    comboBoxFontSize.SelectedIndex = idxSize;
                 // Restore thumbnails
                 if (miniaturyPerAssembly.TryGetValue(currentAssemblyPath, out var miniatury))
                 {
@@ -65,6 +76,27 @@ namespace mca64Inventor
             dataGridViewParts.CellEndEdit += DataGridViewParts_CellEndEdit;
             dataGridViewParts.EditingControlShowing += DataGridViewParts_EditingControlShowing;
             comboBoxFonts.SelectedIndexChanged += ComboBoxFonts_SelectedIndexChanged;
+            this.FormClosing += MainForm_FormClosing;
+        }
+
+        private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (this.Controls["comboBoxFontSize"] is ComboBox cb)
+            {
+                if (cb.SelectedItem is string selected && float.TryParse(selected.Replace(',', '.'), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float parsed) && parsed > 0)
+                {
+                    Properties.Settings.Default.FontSize = parsed;
+                    Properties.Settings.Default.Save();
+                    LogMessage($"[USTAWIENIA] Zapisano rozmiar czcionki przy zamykaniu okna: {parsed}");
+                }
+                else
+                {
+                    cb.SelectedIndex = 0;
+                    Properties.Settings.Default.FontSize = 1.0f;
+                    Properties.Settings.Default.Save();
+                    LogMessage("[USTAWIENIA] Niepoprawny format rozmiaru czcionki przy zamykaniu okna. Ustawiono domyœlnie 1.0");
+                }
+            }
         }
 
         private void PrepareDataGridView()
@@ -120,12 +152,37 @@ namespace mca64Inventor
             // Add to form at the very top
             this.Controls.Add(comboBoxFonts);
             comboBoxFonts.BringToFront();
+
+            // Add comboBoxFontSize
+            if (!this.Controls.ContainsKey("comboBoxFontSize"))
+            {
+                comboBoxFontSize = new ComboBox();
+                comboBoxFontSize.DropDownStyle = ComboBoxStyle.DropDownList;
+                comboBoxFontSize.Location = new System.Drawing.Point(650, 10); // next to comboBoxFonts
+                comboBoxFontSize.Width = 100;
+                comboBoxFontSize.Name = "comboBoxFontSize";
+                comboBoxFontSize.Anchor = AnchorStyles.Top | AnchorStyles.Left;
+                // Add font size options
+                comboBoxFontSize.Items.Clear();
+                var culture = System.Globalization.CultureInfo.CurrentCulture;
+                for (double v = 0.5; v <= 10.0; v += 0.5)
+                    comboBoxFontSize.Items.Add(v.ToString("0.0", culture));
+                comboBoxFontSize.SelectedIndex = 1; // Default to "1,0" or "1.0" depending on culture
+                this.Controls.Add(comboBoxFontSize);
+                comboBoxFontSize.BringToFront();
+            }
         }
 
         private void ComboBoxFonts_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (!string.IsNullOrEmpty(currentAssemblyPath))
                 fontIndexPerAssembly[currentAssemblyPath] = comboBoxFonts.SelectedIndex;
+        }
+
+        private void ComboBoxFontSize_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (!string.IsNullOrEmpty(currentAssemblyPath) && this.Controls["comboBoxFontSize"] is ComboBox cb)
+                fontSizeIndexPerAssembly[currentAssemblyPath] = cb.SelectedIndex;
         }
 
         private void DataGridViewParts_CellEndEdit(object sender, DataGridViewCellEventArgs e)

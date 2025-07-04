@@ -7,7 +7,7 @@ namespace mca64Inventor
         private System.Windows.Forms.Button buttonGenerateThumbnails;
         private System.Windows.Forms.Button buttonGrawerowanie;
         private System.Windows.Forms.Label labelFontSize;
-        private System.Windows.Forms.TextBox textBoxFontSize;
+        private System.Windows.Forms.ComboBox comboBoxFontSize;
         private System.Windows.Forms.TextBox textBoxLog;
         private System.Windows.Forms.CheckBox checkBoxCloseParts;
         private System.Windows.Forms.ComboBox comboBoxFonts;
@@ -29,7 +29,7 @@ namespace mca64Inventor
             this.buttonGenerateThumbnails = new System.Windows.Forms.Button();
             this.buttonGrawerowanie = new System.Windows.Forms.Button();
             this.labelFontSize = new System.Windows.Forms.Label();
-            this.textBoxFontSize = new System.Windows.Forms.TextBox();
+            this.comboBoxFontSize = new System.Windows.Forms.ComboBox();
             this.textBoxLog = new System.Windows.Forms.TextBox();
             this.checkBoxCloseParts = new System.Windows.Forms.CheckBox();
             this.comboBoxFonts = new System.Windows.Forms.ComboBox();
@@ -38,7 +38,7 @@ namespace mca64Inventor
             // 
             // Controls layout in a single row, evenly distributed across the form width
             int margin = 10;
-            int controlsCount = 6; // labelFontSize, textBoxFontSize, comboBoxFonts, checkBoxCloseParts, buttonGrawerowanie, buttonGenerateThumbnails
+            int controlsCount = 6; // labelFontSize, comboBoxFontSize, comboBoxFonts, checkBoxCloseParts, buttonGrawerowanie, buttonGenerateThumbnails
             int formWidth = this.ClientSize.Width;
             int controlWidth = (formWidth - (controlsCount + 1) * margin) / controlsCount;
             int controlHeight = 30;
@@ -49,9 +49,14 @@ namespace mca64Inventor
             this.labelFontSize.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             this.labelFontSize.Text = "Font size:";
 
-            this.textBoxFontSize.Location = new System.Drawing.Point(margin + (controlWidth + margin) * 1, y);
-            this.textBoxFontSize.Size = new System.Drawing.Size(controlWidth, controlHeight);
-            this.textBoxFontSize.Text = "2.0";
+            this.comboBoxFontSize.Location = new System.Drawing.Point(margin + (controlWidth + margin) * 1, y);
+            this.comboBoxFontSize.Size = new System.Drawing.Size(controlWidth, controlHeight);
+            this.comboBoxFontSize.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBoxFontSize.Items.Clear();
+            var culture = System.Globalization.CultureInfo.CurrentCulture;
+            for (double v = 1.0; v <= 10.0; v += 0.5)
+                this.comboBoxFontSize.Items.Add(v.ToString("0.0", culture));
+            this.comboBoxFontSize.SelectedIndex = 0;
 
             this.comboBoxFonts.Location = new System.Drawing.Point(margin + (controlWidth + margin) * 2, y);
             this.comboBoxFonts.Size = new System.Drawing.Size(controlWidth, controlHeight);
@@ -83,8 +88,8 @@ namespace mca64Inventor
                 int cw = (w - (controlsCount + 1) * margin) / controlsCount;
                 this.labelFontSize.Location = new System.Drawing.Point(margin, y);
                 this.labelFontSize.Size = new System.Drawing.Size(cw, controlHeight);
-                this.textBoxFontSize.Location = new System.Drawing.Point(margin + (cw + margin) * 1, y);
-                this.textBoxFontSize.Size = new System.Drawing.Size(cw, controlHeight);
+                this.comboBoxFontSize.Location = new System.Drawing.Point(margin + (cw + margin) * 1, y);
+                this.comboBoxFontSize.Size = new System.Drawing.Size(cw, controlHeight);
                 this.comboBoxFonts.Location = new System.Drawing.Point(margin + (cw + margin) * 2, y);
                 this.comboBoxFonts.Size = new System.Drawing.Size(cw, controlHeight);
                 this.checkBoxCloseParts.Location = new System.Drawing.Point(margin + (cw + margin) * 3, y);
@@ -127,7 +132,7 @@ namespace mca64Inventor
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 460);
             this.Controls.Add(this.labelFontSize);
-            this.Controls.Add(this.textBoxFontSize);
+            this.Controls.Add(this.comboBoxFontSize);
             this.Controls.Add(this.comboBoxFonts);
             this.Controls.Add(this.checkBoxCloseParts);
             this.Controls.Add(this.buttonGrawerowanie);

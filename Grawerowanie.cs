@@ -288,12 +288,16 @@ namespace mca64Inventor
                 }
                 return;
             }
-            float realFontSize = fontSize;
+            // POBIERZ ZAWSZE Z comboBoxFontSize
+            float realFontSize = 1.0f;
+            var culture = System.Globalization.CultureInfo.CurrentCulture;
             foreach (Form f in System.Windows.Forms.Application.OpenForms)
             {
-                if (f is MainForm mainForm && mainForm.Controls["textBoxFontSize"] is System.Windows.Forms.TextBox tb && float.TryParse(tb.Text.Replace(',', '.'), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out float parsed) && parsed > 0)
+                if (f is MainForm mainForm && mainForm.Controls["comboBoxFontSize"] is ComboBox cb && cb.SelectedItem is string selected)
                 {
-                    realFontSize = parsed;
+                    if (!float.TryParse(selected, System.Globalization.NumberStyles.Float, culture, out realFontSize) || realFontSize <= 0)
+                        realFontSize = 1.0f;
+                    mainForm.LogMessage($"[GRAWEROWANIE] U¿yto rozmiaru czcionki z comboBoxFontSize: {realFontSize}");
                     break;
                 }
             }
@@ -362,14 +366,6 @@ namespace mca64Inventor
         /// <summary>
         /// Performs engraving on the part file if it has the "Grawer" property.
         /// </summary>
-        private void WykonajGrawerowanie(string sciezkaPliku, string tekstGrawerowania, List<Document> otwarteDokumenty, Inventor.Application aplikacja)
-        {
-            WykonajGrawerowanie(sciezkaPliku, tekstGrawerowania, 1.0f, aplikacja);
-        }
-
-        /// <summary>
-        /// New version with fontSize parameter.
-        /// </summary>
         public void WykonajGrawerowanie(string sciezkaPliku, string tekstGrawerowania, float fontSize, Inventor.Application aplikacja)
         {
             if (string.IsNullOrEmpty(tekstGrawerowania)) return;
@@ -389,8 +385,9 @@ namespace mca64Inventor
                     break;
                 }
             }
-            string formattedText = "<StyleOverride Font='" + fontName + "' FontSize='" + realFontSize.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture) + "'>" + tekstGrawerowania + "</StyleOverride>";
-            string debugText = formattedText;
+            var currentCulture = System.Globalization.CultureInfo.CurrentCulture;
+            string formattedText = "<StyleOverride Font='" + fontName + "' FontSize='" + realFontSize.ToString("0.0", currentCulture) + "'>" + tekstGrawerowania + "</StyleOverride>";
+            string debugText = formattedText + " | Path: " + sciezkaPliku;
             foreach (Form f in System.Windows.Forms.Application.OpenForms)
             {
                 if (f is MainForm mf)
@@ -440,8 +437,8 @@ namespace mca64Inventor
                 }
                 szkic = dokumentCzesci.ComponentDefinition.Sketches.Add(dokumentCzesci.ComponentDefinition.WorkPlanes[3]);
                 var poleTekstowe2 = szkic.TextBoxes.AddFitted(pozycjaTekstu, tekstGrawerowania);
-                string formattedText2 = "<StyleOverride Font='" + fontName + "' FontSize='" + realFontSize.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture) + "'>" + tekstGrawerowania + "</StyleOverride>";
-                string debugText2 = formattedText2;
+                string formattedText2 = "<StyleOverride Font='" + fontName + "' FontSize='" + realFontSize.ToString("0.0", currentCulture) + "'>" + tekstGrawerowania + "</StyleOverride>";
+                string debugText2 = formattedText2 + " | Path: " + sciezkaPliku;
                 foreach (Form f in System.Windows.Forms.Application.OpenForms)
                 {
                     if (f is MainForm mf)

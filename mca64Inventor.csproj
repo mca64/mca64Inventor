@@ -134,6 +134,7 @@
       <DependentUpon>MainForm.cs</DependentUpon>
     </Compile>
     <Compile Include="PictureDispConverter.cs" />
+    <Compile Include="Properties\Settings.Designer.cs" />
     <Compile Include="Resource1.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -160,6 +161,11 @@
   <PropertyGroup>
     <PreBuildEvent>
     </PreBuildEvent>
-    <PostBuildEvent>start "" "C:\Program Files\Autodesk\Inventor 2016\Bin\Inventor.exe" "C:\$Vault\Projektowy\Główny\Astrus - Place zabaw\Projektowy\10.Prototypy\06.Inne\06.0156 Kosz\06.0156 Kosz.iam"</PostBuildEvent>
+    <PostBuildEvent>:waitloop
+if exist "$(TargetDir)$(TargetFileName)" goto continue
+timeout /t 1
+goto waitloop
+:continue
+start "" "C:\Program Files\Autodesk\Inventor 2016\Bin\Inventor.exe" "C:\$Vault\Projektowy\Główny\Astrus - Place zabaw\Projektowy\10.Prototypy\06.Inne\06.0156 Kosz\06.0156 Kosz.iam"</PostBuildEvent>
   </PropertyGroup>
 </Project>
