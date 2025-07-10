@@ -21,8 +21,7 @@ AddIn for Autodesk Inventor.
 
 ### How to use
 1.  Build the project in Visual Studio (requires .NET Framework 4.8 and Autodesk Inventor references).
-2.  Register the DLL using `regasm /codebase mca64Inventor.dll` (as administrator).
-3.  Add an `.addin` manifest file to Inventor's AddIns folder.
+2.  Create an `.addin` manifest file (see example below) and place it, along with the compiled `mca64Inventor.dll` file, in Inventor's AddIns folder.
     Example location: `C:\Users\<YourUserName>\AppData\Roaming\Autodesk\Inventor <Version>\Addins\`
 
 #### Example `.addin` manifest file
@@ -64,8 +63,7 @@ AddIn dla Autodesk Inventor.
 
 ### Jak używać
 1.  Zbuduj projekt w Visual Studio (wymaga .NET Framework 4.8 i referencji do Autodesk Inventor).
-2.  Zarejestruj plik DLL za pomocą `regasm /codebase mca64Inventor.dll` (jako administrator).
-3.  Dodaj plik manifestu `.addin` do folderu AddIns Inventora.
+2.  Utwórz plik manifestu `.addin` (patrz przykład poniżej) i umieść go, wraz ze skompilowanym plikiem `mca64Inventor.dll`, w folderze AddIns Inventora.
     Przykład lokalizacji: `C:\Users\<TwojaNazwaUżytkownika>\AppData\Roaming\Autodesk\Inventor <Wersja>\Addins\`
 
 #### Przykład pliku manifestu `.addin`
