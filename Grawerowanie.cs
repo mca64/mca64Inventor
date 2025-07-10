@@ -298,7 +298,7 @@ namespace mca64Inventor
                 }
                 return;
             }
-            // Zapami�taj referencj� do z�o�enia u�ytego do grawerowania
+            // Zapamiętaj referencję do złożenia użytego do grawerowania
             var docToReactivate = dokumentZespolu;
             // POBIERZ ZAWSZE Z comboBoxFontSize
             float realFontSize = 1.0f;
@@ -309,7 +309,7 @@ namespace mca64Inventor
                 {
                     if (!float.TryParse(selected, System.Globalization.NumberStyles.Float, culture, out realFontSize) || realFontSize <= 0)
                         realFontSize = 1.0f;
-                    mainForm.LogMessage($"[GRAWEROWANIE] U�yto rozmiaru czcionki z comboBoxFontSize: {realFontSize}");
+                    mainForm.LogMessage($"[GRAWEROWANIE] Użyto rozmiaru czcionki z comboBoxFontSize: {realFontSize}");
                     break;
                 }
             }
@@ -331,37 +331,39 @@ namespace mca64Inventor
             string folderIGES = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(dokumentZespolu.FullFileName), "IGES");
             WyczyscFolder(folderIGES, "*.igs");
             var przetworzonePliki = new HashSet<string>();
-            var otwarteDokumenty = new List<Document>();
+            var newlyOpenedParts = new List<PartDocument>(); // Zmieniono nazwę zmiennej
             var grawerowaneCzesci = new List<(string Nazwa, string Grawer)>();
             foreach (var czesc in czesci)
             {
                 if (string.IsNullOrEmpty(czesc.Grawer)) continue;
                 if (przetworzonePliki.Contains(czesc.SciezkaPliku)) continue;
-                WykonajGrawerowanie(czesc.SciezkaPliku, czesc.Grawer, realFontSize, aplikacja);
+                bool wasNewlyOpened;
+                PartDocument engravedPart = WykonajGrawerowanie(czesc.SciezkaPliku, czesc.Grawer, realFontSize, aplikacja, out wasNewlyOpened);
+                if (engravedPart != null && wasNewlyOpened) newlyOpenedParts.Add(engravedPart); // Dodano do listy nowo otwartych
                 EksportujDoIGES(czesc.SciezkaPliku, folderIGES, aplikacja);
-                if (zamykajCzesci)
+                grawerowaneCzesci.Add((System.IO.Path.GetFileNameWithoutExtension(czesc.SciezkaPliku), czesc.Grawer));
+                przetworzonePliki.Add(czesc.SciezkaPliku);
+            }
+            if (zamykajCzesci) // Przeniesiono logikę zamykania poza pętlę
+            {
+                foreach (var partDoc in newlyOpenedParts)
                 {
-                    // Zamknij wszystkie otwarte dokumenty typu PartDocument o tej �cie�ce
-                    for (int i = aplikacja.Documents.Count; i >= 1; i--)
+                    try
                     {
-                        var doc = aplikacja.Documents[i];
-                        if (doc is PartDocument && string.Equals(doc.FullFileName, czesc.SciezkaPliku, StringComparison.OrdinalIgnoreCase))
+                        partDoc.Close(false);
+                    }
+                    catch (Exception ex)
+                    {
+                        foreach (Form f in System.Windows.Forms.Application.OpenForms)
                         {
-                            try { doc.Close(false); } catch (Exception ex) {
-                                foreach (Form f in System.Windows.Forms.Application.OpenForms)
-                                {
-                                    if (f is MainForm mf)
-                                    {
-                                        mf.LogMessage($"B��d zamykania cz�ci: {doc.FullFileName} - {ex.Message}");
-                                        break;
-                                    }
-                                }
+                            if (f is MainForm mf)
+                            {
+                                mf.LogMessage($"Błąd zamykania części: {partDoc.FullFileName} - {ex.Message}");
+                                break;
                             }
                         }
                     }
                 }
-                grawerowaneCzesci.Add((System.IO.Path.GetFileNameWithoutExtension(czesc.SciezkaPliku), czesc.Grawer));
-                przetworzonePliki.Add(czesc.SciezkaPliku);
             }
             if (grawerowaneCzesci.Count > 0)
             {
@@ -379,7 +381,7 @@ namespace mca64Inventor
                     }
                 }
             }
-            // Po zako�czeniu grawerowania wr�� do z�o�enia u�ytego do grawerowania
+            // Po zakończeniu grawerowania wróć do złożenia użytego do grawerowania
             if (docToReactivate != null)
             {
                 try
@@ -392,7 +394,7 @@ namespace mca64Inventor
                     {
                         if (f is MainForm mf)
                         {
-                            mf.LogMessage($"B��d podczas powrotu do zak�adki ze z�o�eniem: {ex.Message}");
+                            mf.LogMessage($"Błąd podczas powrotu do zakładki ze złożeniem: {ex.Message}");
                             break;
                         }
                     }
@@ -421,11 +423,45 @@ namespace mca64Inventor
         /// <summary>
         /// Performs engraving on the part file if it has the "Grawer" property.
         /// </summary>
-        public void WykonajGrawerowanie(string sciezkaPliku, string tekstGrawerowania, float fontSize, Inventor.Application aplikacja)
+        public PartDocument WykonajGrawerowanie(string sciezkaPliku, string tekstGrawerowania, float fontSize, Inventor.Application aplikacja, out bool wasNewlyOpened)
         {
-            if (string.IsNullOrEmpty(tekstGrawerowania)) return;
-            var dokumentCzesci = aplikacja.Documents.Open(sciezkaPliku) as PartDocument;
-            if (dokumentCzesci == null) return;
+            wasNewlyOpened = false;
+            if (string.IsNullOrEmpty(tekstGrawerowania)) return null;
+
+            PartDocument dokumentCzesci = null;
+            // Check if the document is already open
+            foreach (Document doc in aplikacja.Documents)
+            {
+                if (string.Equals(doc.FullFileName, sciezkaPliku, StringComparison.OrdinalIgnoreCase) && doc is PartDocument)
+                {
+                    dokumentCzesci = (PartDocument)doc;
+                    break;
+                }
+            }
+
+            if (dokumentCzesci == null)
+            {
+                // Document is not open, open it
+                try
+                {
+                    dokumentCzesci = aplikacja.Documents.Open(sciezkaPliku, false) as PartDocument; // Open as invisible
+                    wasNewlyOpened = true;
+                }
+                catch (Exception ex)
+                {
+                    foreach (Form f in System.Windows.Forms.Application.OpenForms)
+                    {
+                        if (f is MainForm mf)
+                        {
+                            mf.LogMessage($"Error opening part for engraving: {sciezkaPliku} - {ex.Message}");
+                            break;
+                        }
+                    }
+                    return null;
+                }
+            }
+
+            if (dokumentCzesci == null) return null;
 
             if (dokumentCzesci.ComponentDefinition == null)
             {
@@ -437,7 +473,7 @@ namespace mca64Inventor
                         break;
                     }
                 }
-                return;
+                return null;
             }
 
             if (dokumentCzesci.ComponentDefinition.WorkPlanes.Count < 3)
@@ -450,7 +486,7 @@ namespace mca64Inventor
                         break;
                     }
                 }
-                return;
+                return null;
             }
 
             PlanarSketch szkic = dokumentCzesci.ComponentDefinition.Sketches.Add(dokumentCzesci.ComponentDefinition.WorkPlanes[2]);
@@ -464,7 +500,7 @@ namespace mca64Inventor
                         break;
                     }
                 }
-                return;
+                return null;
             }
 
             Point2d pozycjaTekstu = aplikacja.TransientGeometry.CreatePoint2d(-1, 0);
@@ -501,7 +537,7 @@ namespace mca64Inventor
                         break;
                     }
                 }
-                return;
+                return null;
             }
             poleTekstowe.FormattedText = formattedText;
 
@@ -526,7 +562,7 @@ namespace mca64Inventor
                         break;
                     }
                 }
-                return;
+                return null;
             }
 
             ExtrudeFeature operacjaEkstrudowaniaNowa = funkcjeEkstruzji.AddByThroughAllExtent(
@@ -545,7 +581,7 @@ namespace mca64Inventor
                         break;
                     }
                 }
-                return;
+                return null;
             }
             operacjaEkstrudowaniaNowa.Name = "Grawerowanie64";
 
@@ -578,7 +614,7 @@ namespace mca64Inventor
                             break;
                         }
                     }
-                    return;
+                    return null;
                 }
 
                 var poleTekstowe2 = szkic.TextBoxes.AddFitted(pozycjaTekstu, tekstGrawerowania);
@@ -592,7 +628,7 @@ namespace mca64Inventor
                             break;
                         }
                     }
-                    return;
+                    return null;
                 }
 
                 string formattedText2 = "<StyleOverride Font='" + fontName + "' FontSize='" + realFontSize.ToString("0.0", currentCulture) + "'>" + tekstGrawerowania + "</StyleOverride>";
@@ -618,7 +654,7 @@ namespace mca64Inventor
                             break;
                         }
                     }
-                    return;
+                    return null;
                 }
 
                 operacjaEkstrudowaniaNowa = funkcjeEkstruzji.AddByThroughAllExtent(
@@ -637,12 +673,13 @@ namespace mca64Inventor
                             break;
                         }
                     }
-                    return;
+                    return null;
                 }
                 operacjaEkstrudowaniaNowa.Name = "Grawerowanie64";
             }
 
             dokumentCzesci.Save();
+            return dokumentCzesci;
         }
 
         /// <summary>

@@ -142,6 +142,14 @@ namespace mca64Inventor
             this.Controls.Add(this.textBoxLog);
             this.Name = "MainForm";
             this.Text = "mca64launcher";
+            // Set the form icon from resources
+            using (System.IO.MemoryStream ms = new System.IO.MemoryStream(global::mca64Inventor.Resource1.icon32))
+            {
+                // Load the image from the byte array
+                System.Drawing.Bitmap bmp = new System.Drawing.Bitmap(ms);
+                // Create an Icon from the Bitmap
+                this.Icon = System.Drawing.Icon.FromHandle(bmp.GetHicon());
+            }
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewParts)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
