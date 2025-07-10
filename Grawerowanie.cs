@@ -29,6 +29,11 @@ namespace mca64Inventor
         public static List<CzesciInfo> PobierzCzesciZespolu(AssemblyDocument dokumentZespolu, Inventor.Application aplikacja, bool generateThumbnails = false)
         {
             var lista = new List<CzesciInfo>();
+            if (dokumentZespolu.ComponentDefinition == null)
+            {
+                MessageBox.Show("The active assembly is missing its core component definition and cannot be processed.", "Assembly Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return lista;
+            }
             PrzetworzWystapienia(dokumentZespolu.ComponentDefinition.Occurrences, lista, new HashSet<string>(), aplikacja, generateThumbnails);
             return lista;
         }
@@ -136,7 +141,11 @@ namespace mca64Inventor
                         aplikacja.ActiveView.SaveAsBitmap(tempPath, 256, 256);
                         using (var bmp = new Bitmap(tempPath))
                         {
-                            miniatura = new Bitmap(bmp);
+                            using (var ms = new System.IO.MemoryStream())
+                            {
+                                bmp.Save(ms, System.Drawing.Imaging.ImageFormat.Bmp);
+                                miniatura = (Image)Image.FromStream(ms).Clone();
+                            }
                         }
                         System.IO.File.Delete(tempPath);
                     }
@@ -193,7 +202,7 @@ namespace mca64Inventor
         /// <summary>
         /// Sets the value of a user-defined property in the part file.
         /// </summary>
-        public static bool UstawWlasciwoscUzytkownika(string sciezkaPliku, string nazwaWlasciwosci, string nowaWartosc, Inventor.Application aplikacja)
+        public static bool UstawWlasciwoscUzytkownika(string sciezkaPliku, string nazwaWlasciwosci, string nowaWartosc, Inventor.Application aplikacja, Action<string> logMessage = null)
         {
             try
             {
@@ -213,8 +222,9 @@ namespace mca64Inventor
                 dokument.Close(true);
                 return true;
             }
-            catch
+            catch (Exception ex)
             {
+                logMessage?.Invoke($"Error setting user property for '{sciezkaPliku}': {ex.Message}");
                 return false;
             }
         }
@@ -288,7 +298,7 @@ namespace mca64Inventor
                 }
                 return;
             }
-            // Zapamiêtaj referencjê do z³o¿enia u¿ytego do grawerowania
+            // Zapamiï¿½taj referencjï¿½ do zï¿½oï¿½enia uï¿½ytego do grawerowania
             var docToReactivate = dokumentZespolu;
             // POBIERZ ZAWSZE Z comboBoxFontSize
             float realFontSize = 1.0f;
@@ -299,10 +309,24 @@ namespace mca64Inventor
                 {
                     if (!float.TryParse(selected, System.Globalization.NumberStyles.Float, culture, out realFontSize) || realFontSize <= 0)
                         realFontSize = 1.0f;
-                    mainForm.LogMessage($"[GRAWEROWANIE] U¿yto rozmiaru czcionki z comboBoxFontSize: {realFontSize}");
+                    mainForm.LogMessage($"[GRAWEROWANIE] Uï¿½yto rozmiaru czcionki z comboBoxFontSize: {realFontSize}");
                     break;
                 }
             }
+            if (string.IsNullOrEmpty(dokumentZespolu.FullFileName))
+            {
+                MessageBox.Show("Please save the assembly document before running the script!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                foreach (Form f in System.Windows.Forms.Application.OpenForms)
+                {
+                    if (f is MainForm mf)
+                    {
+                        mf.LogMessage("The assembly must be saved before engraving.");
+                        break;
+                    }
+                }
+                return;
+            }
+
             var czesci = CzesciHelper.PobierzCzesciZespolu(dokumentZespolu, aplikacja);
             string folderIGES = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(dokumentZespolu.FullFileName), "IGES");
             WyczyscFolder(folderIGES, "*.igs");
@@ -317,7 +341,7 @@ namespace mca64Inventor
                 EksportujDoIGES(czesc.SciezkaPliku, folderIGES, aplikacja);
                 if (zamykajCzesci)
                 {
-                    // Zamknij wszystkie otwarte dokumenty typu PartDocument o tej œcie¿ce
+                    // Zamknij wszystkie otwarte dokumenty typu PartDocument o tej ï¿½cieï¿½ce
                     for (int i = aplikacja.Documents.Count; i >= 1; i--)
                     {
                         var doc = aplikacja.Documents[i];
@@ -328,7 +352,7 @@ namespace mca64Inventor
                                 {
                                     if (f is MainForm mf)
                                     {
-                                        mf.LogMessage($"B³¹d zamykania czêœci: {doc.FullFileName} - {ex.Message}");
+                                        mf.LogMessage($"Bï¿½ï¿½d zamykania czï¿½ci: {doc.FullFileName} - {ex.Message}");
                                         break;
                                     }
                                 }
@@ -355,7 +379,7 @@ namespace mca64Inventor
                     }
                 }
             }
-            // Po zakoñczeniu grawerowania wróæ do z³o¿enia u¿ytego do grawerowania
+            // Po zakoï¿½czeniu grawerowania wrï¿½ï¿½ do zï¿½oï¿½enia uï¿½ytego do grawerowania
             if (docToReactivate != null)
             {
                 try
@@ -368,7 +392,7 @@ namespace mca64Inventor
                     {
                         if (f is MainForm mf)
                         {
-                            mf.LogMessage($"B³¹d podczas powrotu do zak³adki ze z³o¿eniem: {ex.Message}");
+                            mf.LogMessage($"Bï¿½ï¿½d podczas powrotu do zakï¿½adki ze zï¿½oï¿½eniem: {ex.Message}");
                             break;
                         }
                     }
@@ -403,7 +427,46 @@ namespace mca64Inventor
             var dokumentCzesci = aplikacja.Documents.Open(sciezkaPliku) as PartDocument;
             if (dokumentCzesci == null) return;
 
+            if (dokumentCzesci.ComponentDefinition == null)
+            {
+                foreach (Form f in System.Windows.Forms.Application.OpenForms)
+                {
+                    if (f is MainForm mf)
+                    {
+                        mf.LogMessage($"Error: Part '{sciezkaPliku}' does not have a valid component definition.");
+                        break;
+                    }
+                }
+                return;
+            }
+
+            if (dokumentCzesci.ComponentDefinition.WorkPlanes.Count < 3)
+            {
+                foreach (Form f in System.Windows.Forms.Application.OpenForms)
+                {
+                    if (f is MainForm mf)
+                    {
+                        mf.LogMessage($"Error: Part '{sciezkaPliku}' has fewer than 3 work planes.");
+                        break;
+                    }
+                }
+                return;
+            }
+
             PlanarSketch szkic = dokumentCzesci.ComponentDefinition.Sketches.Add(dokumentCzesci.ComponentDefinition.WorkPlanes[2]);
+            if (szkic == null)
+            {
+                foreach (Form f in System.Windows.Forms.Application.OpenForms)
+                {
+                    if (f is MainForm mf)
+                    {
+                        mf.LogMessage($"Error: Could not create sketch on work plane 2 for part '{sciezkaPliku}'.");
+                        break;
+                    }
+                }
+                return;
+            }
+
             Point2d pozycjaTekstu = aplikacja.TransientGeometry.CreatePoint2d(-1, 0);
             string fontName = "Tahoma";
             float realFontSize = fontSize;
@@ -428,6 +491,18 @@ namespace mca64Inventor
                 }
             }
             var poleTekstowe = szkic.TextBoxes.AddFitted(pozycjaTekstu, tekstGrawerowania);
+            if (poleTekstowe == null)
+            {
+                foreach (Form f in System.Windows.Forms.Application.OpenForms)
+                {
+                    if (f is MainForm mf)
+                    {
+                        mf.LogMessage($"Error: Could not create text box for part '{sciezkaPliku}'.");
+                        break;
+                    }
+                }
+                return;
+            }
             poleTekstowe.FormattedText = formattedText;
 
             var funkcjeEkstruzji = dokumentCzesci.ComponentDefinition.Features.ExtrudeFeatures;
@@ -441,11 +516,37 @@ namespace mca64Inventor
             }
 
             Profile profil = szkic.Profiles.AddForSolid();
+            if (profil == null)
+            {
+                foreach (Form f in System.Windows.Forms.Application.OpenForms)
+                {
+                    if (f is MainForm mf)
+                    {
+                        mf.LogMessage($"Error: Could not create profile for part '{sciezkaPliku}'.");
+                        break;
+                    }
+                }
+                return;
+            }
+
             ExtrudeFeature operacjaEkstrudowaniaNowa = funkcjeEkstruzji.AddByThroughAllExtent(
                 profil,
                 PartFeatureExtentDirectionEnum.kPositiveExtentDirection,
                 PartFeatureOperationEnum.kCutOperation
             );
+
+            if (operacjaEkstrudowaniaNowa == null)
+            {
+                foreach (Form f in System.Windows.Forms.Application.OpenForms)
+                {
+                    if (f is MainForm mf)
+                    {
+                        mf.LogMessage($"Error: Could not create extrusion for part '{sciezkaPliku}'.");
+                        break;
+                    }
+                }
+                return;
+            }
             operacjaEkstrudowaniaNowa.Name = "Grawerowanie64";
 
             if ((int)operacjaEkstrudowaniaNowa.HealthStatus == 11780)
@@ -467,7 +568,33 @@ namespace mca64Inventor
                     }
                 }
                 szkic = dokumentCzesci.ComponentDefinition.Sketches.Add(dokumentCzesci.ComponentDefinition.WorkPlanes[3]);
+                if (szkic == null)
+                {
+                    foreach (Form f in System.Windows.Forms.Application.OpenForms)
+                    {
+                        if (f is MainForm mf)
+                        {
+                            mf.LogMessage($"Error: Could not create sketch on work plane 3 for part '{sciezkaPliku}'.");
+                            break;
+                        }
+                    }
+                    return;
+                }
+
                 var poleTekstowe2 = szkic.TextBoxes.AddFitted(pozycjaTekstu, tekstGrawerowania);
+                if (poleTekstowe2 == null)
+                {
+                    foreach (Form f in System.Windows.Forms.Application.OpenForms)
+                    {
+                        if (f is MainForm mf)
+                        {
+                            mf.LogMessage($"Error: Could not create text box for part '{sciezkaPliku}' on second attempt.");
+                            break;
+                        }
+                    }
+                    return;
+                }
+
                 string formattedText2 = "<StyleOverride Font='" + fontName + "' FontSize='" + realFontSize.ToString("0.0", currentCulture) + "'>" + tekstGrawerowania + "</StyleOverride>";
                 string debugText2 = formattedText2 + " | Path: " + sciezkaPliku;
                 foreach (Form f in System.Windows.Forms.Application.OpenForms)
@@ -481,11 +608,37 @@ namespace mca64Inventor
                 poleTekstowe2.FormattedText = formattedText2;
 
                 Profile nowyProfil = szkic.Profiles.AddForSolid();
+                if (nowyProfil == null)
+                {
+                    foreach (Form f in System.Windows.Forms.Application.OpenForms)
+                    {
+                        if (f is MainForm mf)
+                        {
+                            mf.LogMessage($"Error: Could not create profile for part '{sciezkaPliku}' on second attempt.");
+                            break;
+                        }
+                    }
+                    return;
+                }
+
                 operacjaEkstrudowaniaNowa = funkcjeEkstruzji.AddByThroughAllExtent(
                     nowyProfil,
                     PartFeatureExtentDirectionEnum.kPositiveExtentDirection,
                     PartFeatureOperationEnum.kCutOperation
                 );
+
+                if (operacjaEkstrudowaniaNowa == null)
+                {
+                    foreach (Form f in System.Windows.Forms.Application.OpenForms)
+                    {
+                        if (f is MainForm mf)
+                        {
+                            mf.LogMessage($"Error: Could not create extrusion for part '{sciezkaPliku}' on second attempt.");
+                            break;
+                        }
+                    }
+                    return;
+                }
                 operacjaEkstrudowaniaNowa.Name = "Grawerowanie64";
             }
 

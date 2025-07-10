@@ -10,6 +10,7 @@ namespace mca64Inventor
         private System.Windows.Forms.ComboBox comboBoxFontSize;
         private System.Windows.Forms.TextBox textBoxLog;
         private System.Windows.Forms.CheckBox checkBoxCloseParts;
+        private System.Windows.Forms.CheckBox checkBoxGenerateThumbnails;
         private System.Windows.Forms.ComboBox comboBoxFonts;
 
         protected override void Dispose(bool disposing)
@@ -70,7 +71,7 @@ namespace mca64Inventor
             this.buttonGrawerowanie.Location = new System.Drawing.Point(margin + (controlWidth + margin) * 4, y);
             this.buttonGrawerowanie.Size = new System.Drawing.Size(controlWidth, controlHeight);
             this.buttonGrawerowanie.TabIndex = 1;
-            this.buttonGrawerowanie.Text = "Engrave";
+            this.buttonGrawerowanie.Text = "Engrave " + System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
             this.buttonGrawerowanie.UseVisualStyleBackColor = true;
             this.buttonGrawerowanie.Click += new System.EventHandler(this.buttonGrawerowanie_Click);
 

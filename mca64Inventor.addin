@@ -1,0 +1,17 @@
+
+<Addin Type="Standard">
+  <!--ClassId must match the GUID of the AddInServer class-->
+  <ClassId>{a5f3c3e7-7c33-46a2-b16a-42a4a4c25a17}</ClassId>
+
+  <!--ClientId must match the ClassId-->
+  <ClientId>{a5f3c3e7-7c33-46a2-b16a-42a4a4c25a17}</ClientId>
+
+  <!--The name of the assembly to load-->
+  <Assembly>mca64Inventor.dll</Assembly>
+
+  <DisplayName>MCA64 Grawerowanie</DisplayName>
+  <Description>Wtyczka do grawerowania.</Description>
+  <LoadOnStartUp>1</LoadOnStartUp>
+  <UserUnloadable>1</UserUnloadable>
+  <Hidden>0</Hidden>
+</Addin>

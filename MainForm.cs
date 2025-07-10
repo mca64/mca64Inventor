@@ -6,15 +6,16 @@ using System.Windows.Forms;
 using Inventor;
 using System.Linq;
 using System.Configuration;
+using mca64Inventor;
 // Add aliases for ambiguous types
 using WinFormsTextBox = System.Windows.Forms.TextBox;
+using WinFormsApplication = System.Windows.Forms.Application;
 using SysEnvironment = System.Environment;
 
 namespace mca64Inventor
 {
     public partial class MainForm : Form
     {
-        private float globalFontSize = 1.0f;
         private static Dictionary<string, int> fontIndexPerAssembly = new Dictionary<string, int>();
         private static Dictionary<string, int> fontSizeIndexPerAssembly = new Dictionary<string, int>();
         private static Dictionary<string, List<(string, Image, string)>> miniaturyPerAssembly = new Dictionary<string, List<(string, Image, string)>>();
@@ -34,16 +35,27 @@ namespace mca64Inventor
             }
         }
 
+        public string SelectedFontName
+        {
+            get
+            {
+                if (this.Controls["comboBoxFonts"] is ComboBox cb && cb.SelectedItem is string selectedFont)
+                    return selectedFont;
+                return "Tahoma"; // Default font
+            }
+        }
+
         public MainForm()
         {
             InitializeComponent();
             AddFontComboBox();
-            // Dodaj obs³ugê comboBoxFontSize
+            PrepareDataGridView();
+            // Dodaj obsÅ‚ugÄ™ comboBoxFontSize
             if (this.Controls["comboBoxFontSize"] is ComboBox cbFontSize)
             {
                 cbFontSize.SelectedIndexChanged += ComboBoxFontSize_SelectedIndexChanged;
             }
-            // Odczytaj zapisan¹ wartoœæ rozmiaru czcionki
+            // Odczytaj zapisanÄ… wartoÅ›Ä‡ rozmiaru czcionki
             var aplikacja = System.Runtime.InteropServices.Marshal.GetActiveObject("Inventor.Application") as Inventor.Application;
             if (aplikacja != null && aplikacja.ActiveDocument is AssemblyDocument dokumentZespolu)
             {
@@ -70,8 +82,6 @@ namespace mca64Inventor
             this.Width = (int)(screen.Width * 0.75);
             this.Height = (int)(screen.Height * 0.75);
             this.StartPosition = FormStartPosition.CenterScreen;
-            // Prepare DataGridView
-            PrepareDataGridView();
             if (dataGridViewParts.Rows.Count == 0)
                 LoadPartsList();
             // Handle immediate engraving update after editing
@@ -83,9 +93,9 @@ namespace mca64Inventor
 
         public MainForm(string assemblyPath) : this()
         {
-            // Ustaw œcie¿kê z³o¿enia na starcie
+            // Ustaw Å›cieÅ¼kÄ™ zÅ‚oÅ¼enia na starcie
             currentAssemblyPath = assemblyPath;
-            // Przywróæ stan checkBoxCloseParts dla tego z³o¿enia
+            // PrzywrÃ³Ä‡ stan checkBoxCloseParts dla tego zÅ‚oÅ¼enia
             if (this.Controls["checkBoxCloseParts"] is CheckBox cbClose)
             {
                 if (closePartsPerAssembly.TryGetValue(assemblyPath, out bool val))
@@ -124,7 +134,7 @@ namespace mca64Inventor
         protected override void OnLoad(EventArgs e)
         {
             base.OnLoad(e);
-            // Przywróæ ustawienie zamykania czêœci
+            // PrzywrÃ³Ä‡ ustawienie zamykania czÄ™Å›ci
             if (this.Controls["checkBoxCloseParts"] is CheckBox cbClose)
             {
                 cbClose.Checked = Properties.Settings.Default.ClosePartsAfterEngraving;
@@ -144,20 +154,20 @@ namespace mca64Inventor
                 {
                     cb.SelectedIndex = 0;
                     Properties.Settings.Default.FontSize = 1.0f;
-                    LogMessage("[USTAWIENIA] Niepoprawny format rozmiaru czcionki przy zamykaniu okna. Ustawiono domyœlnie 1.0");
+                    LogMessage("[USTAWIENIA] Niepoprawny format rozmiaru czcionki przy zamykaniu okna. Ustawiono domyÅ›lnie 1.0");
                 }
             }
-            // Zapisz ustawienie zamykania czêœci
+            // Zapisz ustawienie zamykania czÄ™Å›ci
             if (this.Controls["checkBoxCloseParts"] is CheckBox cbClose)
             {
                 Properties.Settings.Default.ClosePartsAfterEngraving = cbClose.Checked;
                 if (!string.IsNullOrEmpty(currentAssemblyPath))
                 {
                     closePartsPerAssembly[currentAssemblyPath] = cbClose.Checked;
-                    // Zapisz indywidualnie dla z³o¿enia
+                    // Zapisz indywidualnie dla zÅ‚oÅ¼enia
                     Properties.Settings.Default["ClosePartsAfterEngraving_" + currentAssemblyPath] = cbClose.Checked;
                 }
-                LogMessage($"[USTAWIENIA] Zapisano zamykanie czêœci: {cbClose.Checked}");
+                LogMessage($"[USTAWIENIA] Zapisano zamykanie czÄ™Å›ci: {cbClose.Checked}");
             }
             Properties.Settings.Default.Save();
         }
@@ -257,12 +267,12 @@ namespace mca64Inventor
             var aplikacja = System.Runtime.InteropServices.Marshal.GetActiveObject("Inventor.Application") as Inventor.Application;
             if (aplikacja == null || aplikacja.ActiveDocument == null || !(aplikacja.ActiveDocument is AssemblyDocument dokumentZespolu))
                 return;
-            var czesci = CzesciHelper.PobierzCzesciZespolu(dokumentZespolu, aplikacja, false);
+            var czesci = mca64Inventor.CzesciHelper.PobierzCzesciZespolu(dokumentZespolu, aplikacja, false);
             var czesc = czesci.Find(c => c.Nazwa == partName);
             if (czesc == null) return;
             if ((czesc.Grawer ?? string.Empty) == (newGrawer ?? string.Empty))
                 return;
-            bool ok = CzesciHelper.UstawWlasciwoscUzytkownika(czesc.SciezkaPliku, "Grawer", newGrawer, aplikacja);
+            bool ok = CzesciHelper.UstawWlasciwoscUzytkownika(czesc.SciezkaPliku, "Grawer", newGrawer, aplikacja, LogMessage);
             if (ok)
             {
                 row.Cells["Grawer"].Value = newGrawer;
@@ -328,7 +338,7 @@ namespace mca64Inventor
                 var aplikacja = System.Runtime.InteropServices.Marshal.GetActiveObject("Inventor.Application") as Inventor.Application;
                 if (aplikacja == null || aplikacja.ActiveDocument == null || !(aplikacja.ActiveDocument is AssemblyDocument dokumentZespolu))
                     return;
-                var czesci = CzesciHelper.PobierzCzesciZespolu(dokumentZespolu, aplikacja, false);
+                var czesci = mca64Inventor.CzesciHelper.PobierzCzesciZespolu(dokumentZespolu, aplikacja, false);
                 dataGridViewParts.Rows.Clear();
                 foreach (var czesc in czesci)
                 {
@@ -337,7 +347,10 @@ namespace mca64Inventor
                     dataGridViewParts.Rows.Add(czesc.Nazwa, img, czesc.Grawer, czesc.Grawer);
                 }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                LogMessage($"Error loading parts list: {ex.Message}");
+            }
         }
 
         private void buttonGenerateThumbnails_Click(object sender, EventArgs e)
@@ -351,21 +364,14 @@ namespace mca64Inventor
                 var aplikacja = System.Runtime.InteropServices.Marshal.GetActiveObject("Inventor.Application") as Inventor.Application;
                 if (aplikacja == null || aplikacja.ActiveDocument == null || !(aplikacja.ActiveDocument is AssemblyDocument dokumentZespolu))
                     return;
-                var czesci = CzesciHelper.GenerujMiniaturyDlaCzesci(dokumentZespolu, aplikacja);
+                var czesci = mca64Inventor.CzesciHelper.GenerujMiniaturyDlaCzesci(dokumentZespolu, aplikacja);
                 dataGridViewParts.Rows.Clear();
                 foreach (var czesc in czesci)
                 {
                     var img = czesc.Miniatura ?? new Bitmap(1, 1);
                     dataGridViewParts.Rows.Add(czesc.Nazwa, img, czesc.Grawer, "");
                 }
-                foreach (Form f in System.Windows.Forms.Application.OpenForms)
-                {
-                    if (f is MainForm mf)
-                    {
-                        mf.LogMessage("Thumbnails have been generated (if possible)");
-                        break;
-                    }
-                }
+                LogMessage("Thumbnails have been generated (if possible)");
                 // After generating thumbnails, save them to memory for the given assembly
                 if (!string.IsNullOrEmpty(currentAssemblyPath))
                 {
@@ -373,21 +379,18 @@ namespace mca64Inventor
                     foreach (DataGridViewRow row in dataGridViewParts.Rows)
                     {
                         if (row.Cells[0].Value != null)
-                            miniatury.Add((row.Cells[0].Value.ToString(), row.Cells[1].Value as Image, row.Cells[2].Value?.ToString()));
+                        {
+                            Image originalImage = row.Cells[1].Value as Image;
+                            Image clonedImage = originalImage != null ? (Image)originalImage.Clone() : new Bitmap(1, 1);
+                            miniatury.Add((row.Cells[0].Value.ToString(), clonedImage, row.Cells[2].Value?.ToString()));
+                        }
                     }
                     miniaturyPerAssembly[currentAssemblyPath] = miniatury;
                 }
             }
             catch (Exception ex)
             {
-                foreach (Form f in System.Windows.Forms.Application.OpenForms)
-                {
-                    if (f is MainForm mf)
-                    {
-                        mf.LogMessage($"Error generating thumbnails: {ex.Message}");
-                        break;
-                    }
-                }
+                LogMessage($"Error generating thumbnails: {ex.Message}");
             }
             finally
             {
@@ -425,10 +428,31 @@ namespace mca64Inventor
         // Restore engraving button logic
         private void buttonGrawerowanie_Click(object sender, EventArgs e)
         {
-            var logic = new Grawerowanie();
+            var aplikacja = System.Runtime.InteropServices.Marshal.GetActiveObject("Inventor.Application") as Inventor.Application;
+            if (aplikacja == null)
+            {
+                MessageBox.Show("Cannot get reference to Inventor!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                LogMessage("Cannot get reference to Inventor!");
+                return;
+            }
+            if (aplikacja.ActiveDocument == null)
+            {
+                MessageBox.Show("Open an assembly document before running the script!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                LogMessage("Open an assembly document before running the script!");
+                return;
+            }
+            if (!(aplikacja.ActiveDocument is AssemblyDocument dokumentZespolu))
+            {
+                MessageBox.Show("The active document is not an assembly document!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                LogMessage("The active document is not an assembly document!");
+                return;
+            }
+
+            var logic = new mca64Inventor.Grawerowanie();
             bool zamykajCzesci = false;
             if (this.Controls["checkBoxCloseParts"] is CheckBox cb)
                 zamykajCzesci = cb.Checked;
+
             logic.DoSomething(GlobalFontSize, zamykajCzesci);
         }
     }

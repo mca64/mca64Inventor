@@ -1,54 +1,52 @@
-using System.Reflection; // Importuje klasy do pobierania informacji o zestawie (assembly)
-using System.Runtime.CompilerServices; // Importuje klasy do atrybutów kompilatora
-using System.Runtime.InteropServices; // Importuje klasy do obs³ugi COM i GUID
+using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
-//
-// Informacje ogólne o zestawie s¹ kontrolowane przez poni¿szy zestaw atrybutów.
-// Zmieñ wartoœci tych atrybutów, aby zmodyfikowaæ informacje powi¹zane z zestawem.
-//
-[assembly: AssemblyTitle("mca64Inventor AddIn Template")] // Tytu³ zestawu
-[assembly: AssemblyDescription("Szablon AddIn dla Autodesk Inventor.")] // Opis zestawu
-[assembly: AssemblyConfiguration("")] // Konfiguracja (np. Debug/Release)
-[assembly: AssemblyCompany("YourCompany")] // Nazwa firmy
-[assembly: AssemblyProduct("mca64Inventor AddIn")] // Nazwa produktu
-[assembly: AssemblyCopyright("Copyright © 2024")] // Informacja o prawach autorskich
-[assembly: AssemblyTrademark("")] // Znak towarowy
-[assembly: AssemblyCulture("")] // Kultura (np. "pl-PL")
+// General Information about an assembly is controlled through the following 
+// set of attributes. Change these attribute values to modify the information
+// associated with an assembly.
+[assembly: AssemblyTitle("mca64Inventor AddIn Template")]
+[assembly: AssemblyDescription("AddIn template for Autodesk Inventor.")]
+[assembly: AssemblyConfiguration("")]
+[assembly: AssemblyCompany("YourCompany")]
+[assembly: AssemblyProduct("mca64Inventor AddIn")]
+[assembly: AssemblyCopyright("Copyright Â© 2024")]
+[assembly: AssemblyTrademark("")]
+[assembly: AssemblyCulture("")]
 
-// Poni¿szy GUID jest identyfikatorem typbiblioteki, jeœli projekt jest ujawniany dla COM
+// Setting ComVisible to false makes the types in this assembly not visible 
+// to COM components. If you need to access a type in this assembly from 
+// COM, set the ComVisible attribute to true on that type.
+[assembly: ComVisible(true)]
+
+// The following GUID is for the ID of the typelib if this project is exposed to COM
 [assembly: Guid("D0A4FCF1-B4D0-4824-894A-7FA419AF92F8")]
 
-//
-// Informacje o wersji zestawu sk³adaj¹ siê z nastêpuj¹cych czterech wartoœci:
+// Version information for an assembly consists of the following four values:
 //
 //      Major Version
 //      Minor Version 
 //      Build Number
 //      Revision
 //
-// Mo¿esz okreœliæ wszystkie wartoœci lub u¿yæ domyœlnych numerów Build i Revision
-// za pomoc¹ '*', jak pokazano poni¿ej:
-[assembly: AssemblyVersion("1.0.*")]
+// You can specify all the values or you can default the Build and Revision Numbers 
+// by using the '*' as shown below:
+[assembly: AssemblyVersion("1.0.0.*")]
 
-//
-// Aby podpisaæ zestaw, musisz okreœliæ klucz do u¿ycia. Zobacz dokumentacjê .NET Framework
-// po wiêcej informacji o podpisywaniu zestawów.
-//
-// U¿yj poni¿szych atrybutów, aby kontrolowaæ, który klucz jest u¿ywany do podpisywania.
-//
-// Uwagi: 
-//   (*) Jeœli nie okreœlono klucza, zestaw nie jest podpisany.
-//   (*) KeyName odnosi siê do klucza zainstalowanego w Crypto Service Provider (CSP) na komputerze.
-//   (*) KeyFile odnosi siê do pliku zawieraj¹cego klucz.
-//   (*) Jeœli okreœlono zarówno KeyFile, jak i KeyName, wykonywane s¹ nastêpuj¹ce czynnoœci:
-//       (1) Jeœli KeyName mo¿na znaleŸæ w CSP, ten klucz jest u¿ywany.
-//       (2) Jeœli KeyName nie istnieje, a KeyFile istnieje, klucz z KeyFile jest instalowany w CSP i u¿ywany.
-//   (*) Aby utworzyæ KeyFile, u¿yj narzêdzia sn.exe (Strong Name).
-//       Podczas okreœlania KeyFile, lokalizacja powinna byæ wzglêdna wzglêdem katalogu wyjœciowego projektu,
-//       np. %Project Directory%\obj\<configuration>. Jeœli plik KeyFile jest w katalogu projektu,
-//       u¿yj [assembly: AssemblyKeyFile("..\\..\\mykey.snk")]
-//   (*) Delay Signing to zaawansowana opcja - zobacz dokumentacjê .NET Framework po wiêcej informacji.
-//
-[assembly: AssemblyDelaySign(false)] // Czy opóŸniæ podpisywanie zestawu
-[assembly: AssemblyKeyFile("")] // Œcie¿ka do pliku z kluczem (jeœli u¿ywasz podpisywania)
-[assembly: AssemblyKeyName("")] // Nazwa klucza w CSP (jeœli u¿ywasz podpisywania)
+// To sign your assembly, you must specify a key to use. Refer to the Microsoft .NET Framework documentation for more information on assembly signing.
+// Use the attributes below to control which key is used for signing.
+// Notes:
+//   (*) If no key is specified, the assembly is not signed.
+//   (*) KeyName refers to a key installed in the Crypto Service Provider (CSP) on your machine.
+//   (*) KeyFile refers to a file containing a key.
+//   (*) If the KeyFile and KeyName values are specified, the following occurs:
+//       (1) If the KeyName can be found in the CSP, that key is used.
+//       (2) If the KeyName does not exist and the KeyFile does exist, the key in the KeyFile is installed into the CSP and used.
+//   (*) To create a KeyFile, use the sn.exe (Strong Name) utility.
+//       When specifying the KeyFile, the location of the file should be relative to the project output directory, 
+//       e.g., %Project Directory%\obj\<configuration>. If the KeyFile is in your project directory, 
+//       use [assembly: AssemblyKeyFile("..\\..\\mykey.snk")]
+//   (*) Delay Signing is an advanced option - see the .NET Framework documentation for more information.
+[assembly: AssemblyDelaySign(false)]
+[assembly: AssemblyKeyFile("")]
+[assembly: AssemblyKeyName("")]
