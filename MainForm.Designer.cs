@@ -65,7 +65,7 @@ namespace mca64Inventor
             this.checkBoxCloseParts.Location = new System.Drawing.Point(margin + (controlWidth + margin) * 3, y);
             this.checkBoxCloseParts.Size = new System.Drawing.Size(controlWidth, controlHeight);
             this.checkBoxCloseParts.Text = "Close parts after engraving";
-            this.checkBoxCloseParts.Checked = true;
+            this.checkBoxCloseParts.Checked = false;
             this.checkBoxCloseParts.TabIndex = 10;
 
             this.buttonGrawerowanie.Location = new System.Drawing.Point(margin + (controlWidth + margin) * 4, y);

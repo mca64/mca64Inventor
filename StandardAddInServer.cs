@@ -10,83 +10,89 @@ using System.IO;
 namespace mca64Inventor
 {
     /// <summary>
-    /// Helper class to convert a System.Drawing.Image to a stdole.IPictureDisp.
-    /// This class inherits from AxHost to gain access to the protected static 
-    /// method GetIPictureDispFromPicture.
+    /// Klasa pomocnicza do konwersji System.Drawing.Image na stdole.IPictureDisp.
+    /// Ta klasa dziedziczy po AxHost, aby uzyskać dostęp do chronionej statycznej 
+    /// metody GetIPictureDispFromPicture.
     /// </summary>
     [System.ComponentModel.ToolboxItem(false)]
     internal class PictureDispConverter : System.Windows.Forms.AxHost
     {
-        // A private constructor prevents the class from being instantiated.
+        // Prywatny konstruktor zapobiega tworzeniu instancji klasy.
         private PictureDispConverter() : base(null)
         {
         }
 
         /// <summary>
-        /// Converts an Image to an IPictureDisp.
+        /// Konwertuje obiekt Image na IPictureDisp.
         /// </summary>
-        /// <param name="image">The image to convert.</param>
-        /// <returns>The converted IPictureDisp.</returns>
+        /// <param name="image">Obraz do konwersji.</param>
+        /// <returns>Skonwertowany obiekt IPictureDisp.</returns>
         public static stdole.IPictureDisp GetIPictureDisp(System.Drawing.Image image)
         {
             if (image == null)
             {
                 return null;
             }
-            // Call the protected static method from the base class.
+            // Wywołuje chronioną statyczną metodę z klasy bazowej.
             return GetIPictureDispFromPicture(image) as stdole.IPictureDisp;
         }
     }
 
     /// <summary>
-    /// This is the primary AddIn Server class that implements the ApplicationAddInServer interface
-    /// that all Inventor AddIns are required to implement. The communication between Inventor and
-    /// the AddIn is via the methods on this interface.
+    /// Jest to główna klasa serwera dodatku, która implementuje interfejs ApplicationAddInServer,
+    /// który wszystkie dodatki Inventor muszą implementować. Komunikacja między Inventorem a
+    /// dodatkiem odbywa się za pośrednictwem metod tego interfejsu.
     /// </summary>
     [GuidAttribute("a5f3c3e7-7c33-46a2-b16a-42a4a4c25a17")] // <-- To jest NOWY, UNIKALNY GUID dla Twojej wtyczki
     public class AddInServer : ApplicationAddInServer
     {
-        // Inventor application object.
+        // Obiekt aplikacji Inventor.
         private Inventor.Application m_inventorApplication;
-        private ButtonDefinition m_myButton;
+        private ButtonDefinition m_myButton; // Definicja przycisku.
 
+        /// <summary>
+        /// Konstruktor klasy AddInServer.
+        /// </summary>
         public AddInServer()
         {
         }
 
         #region ApplicationAddInServer Members
 
+        /// <summary>
+        /// Ta metoda jest wywoływana przez Inventora, gdy ładuje dodatek.
+        /// Obiekt AddInSiteObject zapewnia dostęp do obiektu aplikacji Inventor.
+        /// Flaga FirstTime wskazuje, czy dodatek jest ładowany po raz pierwszy.
+        /// </summary>
+        /// <param name="addInSiteObject">Obiekt witryny dodatku.</param>
+        /// <param name="firstTime">Wskazuje, czy dodatek jest ładowany po raz pierwszy.</param>
         public void Activate(ApplicationAddInSite addInSiteObject, bool firstTime)
         {
-            // This method is called by Inventor when it loads the addin.
-            // The AddInSiteObject provides access to the Inventor Application object.
-            // The FirstTime flag indicates if the addin is loaded for the first time.
-
-            // Initialize AddIn members.
+            // Inicjalizacja członków dodatku.
             m_inventorApplication = addInSiteObject.Application;
 
-            // Get the control definitions collection.
+            // Pobiera kolekcję definicji kontrolek.
             ControlDefinitions controlDefs = m_inventorApplication.CommandManager.ControlDefinitions;
 
-            // Get assembly version
+            // Pobiera wersję zestawu.
             Version assemblyVersion = Assembly.GetExecutingAssembly().GetName().Version;
             string versionString = $"v{assemblyVersion.Major}.{assemblyVersion.Minor}.{assemblyVersion.Build}.{assemblyVersion.Revision}";
 
-            // Create the button definition.
+            // Tworzy definicję przycisku.
             m_myButton = controlDefs.AddButtonDefinition(
-                TranslationManager.GetTranslation("EngraveButton"), // Display Name with version
-                "mca64Inventor:GrawerButton", // Internal Name
+                TranslationManager.GetTranslation("EngraveButton"), // Nazwa wyświetlana z wersją
+                "mca64Inventor:GrawerButton", // Nazwa wewnętrzna
                 CommandTypesEnum.kShapeEditCmdType,
                 "{a5f3c3e7-7c33-46a2-b16a-42a4a4c25a17}", // ClientId - musi być ten sam GUID co klasy
-                TranslationManager.GetTranslation("TooltipEngraveButton"), // Tooltip
-                TranslationManager.GetTranslation("DescriptionEngraveButton"), // Description
-                PictureDispConverter.GetIPictureDisp(System.Drawing.Image.FromStream(new System.IO.MemoryStream(Resource1.icon16))), // Icon
-                PictureDispConverter.GetIPictureDisp(System.Drawing.Image.FromStream(new System.IO.MemoryStream(Resource1.icon32)))); // Large Icon
+                TranslationManager.GetTranslation("TooltipEngraveButton"), // Podpowiedź
+                TranslationManager.GetTranslation("DescriptionEngraveButton"), // Opis
+                PictureDispConverter.GetIPictureDisp(System.Drawing.Image.FromStream(new System.IO.MemoryStream(Resource1.icon16))), // Ikona
+                PictureDispConverter.GetIPictureDisp(System.Drawing.Image.FromStream(new System.IO.MemoryStream(Resource1.icon32)))); // Duża ikona
 
-            // Attach the event handler.
+            // Dołącza obsługę zdarzeń.
             m_myButton.OnExecute += OnButtonClick;
 
-            // Define the environments where the tab should appear
+            // Definiuje środowiska, w których ma pojawić się zakładka
             string[] environments = { "Part", "Assembly", "Drawing", "ZeroDoc" };
 
             foreach (string envName in environments)
@@ -99,7 +105,7 @@ namespace mca64Inventor
                 }
                 catch (Exception)
                 {
-                    // If the tab does not exist, create it.
+                    // Jeśli zakładka nie istnieje, utwórz ją.
                     astrusTab = ribbon.RibbonTabs.Add("Astrus", "id_TabAstrus", "{a5f3c3e7-7c33-46a2-b16a-42a4a4c25a17}");
                 }
                 
@@ -110,20 +116,24 @@ namespace mca64Inventor
                 }
                 catch (Exception)
                 {
-                    // If the panel does not exist, create it.
+                    // Jeśli panel nie istnieje, utwórz go.
                     panel = astrusTab.RibbonPanels.Add(TranslationManager.GetTranslation("EngravingColumn"), "mca64Inventor:GrawerPanel", "{a5f3c3e7-7c33-46a2-b16a-42a4a4c25a17}");
                 }
 
-                // Add a command control for the button in the panel.
+                // Dodaje kontrolkę polecenia dla przycisku w panelu.
                 panel.CommandControls.AddButton(m_myButton, true);
             }
         }
 
+        /// <summary>
+        /// Obsługuje kliknięcie przycisku.
+        /// </summary>
+        /// <param name="context">Kontekst wywołania.</param>
         private void OnButtonClick(NameValueMap context)
         {
             try
             {
-                // Get the Inventor application object.
+                // Pobiera obiekt aplikacji Inventor.
                 Inventor.Application inventorApp = System.Runtime.InteropServices.Marshal.GetActiveObject("Inventor.Application") as Inventor.Application;
 
                 if (inventorApp == null)
@@ -146,7 +156,7 @@ namespace mca64Inventor
 
                 AssemblyDocument assemblyDoc = (AssemblyDocument)inventorApp.ActiveDocument;
 
-                // Show the MainForm for the active assembly.
+                // Pokazuje MainForm dla aktywnego złożenia.
                 MainForm.ShowForAssembly(assemblyDoc.FullFileName);
             }
             catch (Exception ex)
@@ -159,13 +169,14 @@ namespace mca64Inventor
             }
         }
 
+        /// <summary>
+        /// Ta metoda jest wywoływana przez Inventora, gdy dodatek jest wyładowywany.
+        /// Dodatek zostanie wyładowany ręcznie przez użytkownika lub
+        /// po zakończeniu sesji Inventora.
+        /// </summary>
         public void Deactivate()
         {
-            // This method is called by Inventor when the AddIn is unloaded.
-            // The AddIn will be unloaded either manually by the user or
-            // when the Inventor session is terminated
-
-            // Release objects.
+            // Zwolnienie obiektów.
             m_myButton.OnExecute -= OnButtonClick;
             m_myButton.Delete();
             m_myButton = null;
@@ -175,11 +186,18 @@ namespace mca64Inventor
             GC.WaitForPendingFinalizers();
         }
 
+        /// <summary>
+        /// Przestarzała metoda, nieużywana.
+        /// </summary>
+        /// <param name="commandID">ID polecenia.</param>
         public void ExecuteCommand(int commandID)
         {
-            // obsolete method, not used
+            // przestarzała metoda, nieużywana
         }
 
+        /// <summary>
+        /// Właściwość Automation.
+        /// </summary>
         public object Automation
         {
             get { return null; }
