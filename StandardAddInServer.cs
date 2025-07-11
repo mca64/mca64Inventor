@@ -3,9 +3,41 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using Inventor;
 using System.Windows.Forms;
+using stdole;
+using System.Drawing;
+using System.IO;
 
 namespace mca64Inventor
 {
+    /// <summary>
+    /// Helper class to convert a System.Drawing.Image to a stdole.IPictureDisp.
+    /// This class inherits from AxHost to gain access to the protected static 
+    /// method GetIPictureDispFromPicture.
+    /// </summary>
+    [System.ComponentModel.ToolboxItem(false)]
+    internal class PictureDispConverter : System.Windows.Forms.AxHost
+    {
+        // A private constructor prevents the class from being instantiated.
+        private PictureDispConverter() : base(null)
+        {
+        }
+
+        /// <summary>
+        /// Converts an Image to an IPictureDisp.
+        /// </summary>
+        /// <param name="image">The image to convert.</param>
+        /// <returns>The converted IPictureDisp.</returns>
+        public static stdole.IPictureDisp GetIPictureDisp(System.Drawing.Image image)
+        {
+            if (image == null)
+            {
+                return null;
+            }
+            // Call the protected static method from the base class.
+            return GetIPictureDispFromPicture(image) as stdole.IPictureDisp;
+        }
+    }
+
     /// <summary>
     /// This is the primary AddIn Server class that implements the ApplicationAddInServer interface
     /// that all Inventor AddIns are required to implement. The communication between Inventor and
@@ -42,12 +74,14 @@ namespace mca64Inventor
 
             // Create the button definition.
             m_myButton = controlDefs.AddButtonDefinition(
-                $"Uruchom Grawerowanie\n{versionString}", // Display Name with version
+                TranslationManager.GetTranslation("EngraveButton"), // Display Name with version
                 "mca64Inventor:GrawerButton", // Internal Name
                 CommandTypesEnum.kShapeEditCmdType,
                 "{a5f3c3e7-7c33-46a2-b16a-42a4a4c25a17}", // ClientId - musi być ten sam GUID co klasy
-                "Uruchamia formularz grawerowania.", // Tooltip
-                "Przycisk do grawerowania"); // Description
+                TranslationManager.GetTranslation("TooltipEngraveButton"), // Tooltip
+                TranslationManager.GetTranslation("DescriptionEngraveButton"), // Description
+                PictureDispConverter.GetIPictureDisp(System.Drawing.Image.FromStream(new System.IO.MemoryStream(Resource1.icon16))), // Icon
+                PictureDispConverter.GetIPictureDisp(System.Drawing.Image.FromStream(new System.IO.MemoryStream(Resource1.icon32)))); // Large Icon
 
             // Attach the event handler.
             m_myButton.OnExecute += OnButtonClick;
@@ -77,7 +111,7 @@ namespace mca64Inventor
                 catch (Exception)
                 {
                     // If the panel does not exist, create it.
-                    panel = astrusTab.RibbonPanels.Add("Grawerowanie", "mca64Inventor:GrawerPanel", "{a5f3c3e7-7c33-46a2-b16a-42a4a4c25a17}");
+                    panel = astrusTab.RibbonPanels.Add(TranslationManager.GetTranslation("EngravingColumn"), "mca64Inventor:GrawerPanel", "{a5f3c3e7-7c33-46a2-b16a-42a4a4c25a17}");
                 }
 
                 // Add a command control for the button in the panel.
@@ -94,19 +128,19 @@ namespace mca64Inventor
 
                 if (inventorApp == null)
                 {
-                    System.Windows.Forms.MessageBox.Show("Inventor application is not running.", "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
+                    System.Windows.Forms.MessageBox.Show(TranslationManager.GetTranslation("ErrorInventorNotRunningMsgBox"), TranslationManager.GetTranslation("Error"), System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
                     return;
                 }
 
                 if (inventorApp.ActiveDocument == null)
                 {
-                    System.Windows.Forms.MessageBox.Show("Please open a document in Inventor before running this command.", "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Exclamation);
+                    System.Windows.Forms.MessageBox.Show(TranslationManager.GetTranslation("ErrorOpenAssemblyMsgBox"), TranslationManager.GetTranslation("Error"), System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Exclamation);
                     return;
                 }
 
                 if (!(inventorApp.ActiveDocument is AssemblyDocument))
                 {
-                    System.Windows.Forms.MessageBox.Show("Please open an assembly document in Inventor before running this command.", "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Exclamation);
+                    System.Windows.Forms.MessageBox.Show(TranslationManager.GetTranslation("ErrorNotAssemblyMsgBox"), TranslationManager.GetTranslation("Error"), System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Exclamation);
                     return;
                 }
 
@@ -119,17 +153,9 @@ namespace mca64Inventor
             {
                 string desktopPath = System.Environment.GetFolderPath(System.Environment.SpecialFolder.Desktop);
                 string logFilePath = System.IO.Path.Combine(desktopPath, "mca64Inventor_ErrorLog.txt");
-                string errorMessage = $@"Timestamp: {System.DateTime.Now}
-Error: {ex.Message}
-
-Stack Trace:
-{ex.StackTrace}
---------------------------------------------------
-";
+                string errorMessage = $"Timestamp: {System.DateTime.Now}{System.Environment.NewLine}Error: {ex.Message}{System.Environment.NewLine}{System.Environment.NewLine}Stack Trace:{System.Environment.NewLine}{ex.StackTrace}{System.Environment.NewLine}--------------------------------------------------{System.Environment.NewLine}";
                 System.IO.File.AppendAllText(logFilePath, errorMessage);
-                System.Windows.Forms.MessageBox.Show($@"An unexpected error occurred. 
-Details have been written to the log file located at:
-{logFilePath}", "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
+                System.Windows.Forms.MessageBox.Show(TranslationManager.GetTranslation("ErrorUnexpected", logFilePath), TranslationManager.GetTranslation("Error"), System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
             }
         }
 

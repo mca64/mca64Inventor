@@ -6,14 +6,165 @@ using System.Windows.Forms;
 using Inventor;
 using System.Linq;
 using System.Configuration;
-using mca64Inventor;
 // Add aliases for ambiguous types
 using WinFormsTextBox = System.Windows.Forms.TextBox;
 using WinFormsApplication = System.Windows.Forms.Application;
 using SysEnvironment = System.Environment;
+using System.Globalization; // Added for CultureInfo
 
 namespace mca64Inventor
 {
+    public static class TranslationManager
+    {
+        public enum Language
+        {
+            English,
+            Polish
+        }
+
+        private static Language currentLanguage = Language.English;
+        private static Dictionary<string, Dictionary<string, string>> translations = new Dictionary<string, Dictionary<string, string>>();
+
+        static TranslationManager()
+        {
+            // English translations
+            translations["English"] = new Dictionary<string, string>
+            {
+                {"MainFormTitle", "mca64Inventor"},
+                {"FontSizeLabel", "Font size:"},
+                {"ClosePartsCheckbox", "Close parts after engraving"},
+                {"EngraveButton", "Engrave"},
+                {"ThumbnailsButton", "Thumbnails"},
+                {"PartNameColumn", "Part name"},
+                {"PreviewColumn", "Preview"},
+                {"EngravingColumn", "mca64"},
+                {"NewEngravingColumn", "New Engraving"},
+                {"Error", "Error"}, // Generic error title for MessageBox
+                {"ErrorInventorNotRunning", "Cannot get reference to Inventor!"},
+                {"ErrorOpenAssembly", "Open an assembly document before running the script!"},
+                {"ErrorNotAssembly", "The active document is not an assembly document!"},
+                {"ErrorSaveAssembly", "Please save the assembly document before running the script!"},
+                {"LogFontSizeSaved", "[SETTINGS] Font size saved on window closing: {0}"},
+                {"LogFontSizeInvalid", "[SETTINGS] Invalid font size format on window closing. Defaulted to 1.0"},
+                {"LogClosePartsSaved", "[SETTINGS] Close parts setting saved: {0}"},
+                {"LogThumbnailsGenerated", "Thumbnails have been generated (if possible)"},
+                {"LogErrorLoadingParts", "Error loading parts list: {0}"},
+                {"LogErrorGeneratingThumbnails", "Error generating thumbnails: {0}"},
+                {"ErrorOpeningPartForEngraving", "Error opening part for engraving: {0} - {1}"},
+                {"ErrorPartNoComponentDefinition", "Error: Part '{0}' does not have a valid component definition."},
+                {"ErrorPartFewerThan3WorkPlanes", "Error: Part '{0}' has fewer than 3 work planes."},
+                {"ErrorCouldNotCreateSketch", "Error: Could not create sketch on work plane {0} for part '{1}'."},
+                {"ErrorCouldNotCreateTextBox", "Error: Could not create text box for part '{0}'."},
+                {"ErrorCouldNotCreateProfile", "Error: Could not create profile for part '{0}'."},
+                {"ErrorCouldNotCreateExtrusion", "Error: Could not create extrusion for part '{0}'."},
+                {"LogWrongSketchPlane", "Wrong sketch plane! Trying again with another plane."},
+                {"LogEngravedParts", "Engraved parts:"},
+                {"LogErrorClosingPart", "Error closing part: {0} - {1}"},
+                {"LogErrorReturningToAssembly", "Error returning to assembly tab: {0}"},
+                {"LogFontSizeUsed", "[ENGRAVING] Font size used from comboBoxFontSize: {0}"},
+                {"TooltipEngraveButton", "Launches the engraving form."},
+                {"DescriptionEngraveButton", "Button for engraving"},
+                {"ErrorInventorNotRunningMsgBox", "Cannot get reference to Inventor!"},
+                {"ErrorOpenAssemblyMsgBox", "Open an assembly document before running the script!"},
+                {"ErrorNotAssemblyMsgBox", "The active document is not an assembly document!"},
+                {"ErrorSaveAssemblyMsgBox", "Please save the assembly document before running the script!"},
+                {"ErrorUnexpected", "An unexpected error occurred. \nDetails have been written to the log file located at:\n{0}"},
+                {"ErrorAssemblyMissingComponentDefinition", "The active assembly is missing its core component definition and cannot be processed."},
+                {"ErrorFileDoesNotExist", "File does not exist: {0}"},
+                {"ErrorOpeningPart", "Error opening part: {0} - {1}"},
+                {"ErrorGeneratingThumbnail", "Error generating thumbnail for: {0} - {1}"},
+                {"ErrorSettingUserProperty", "Error setting user property for '{0}': {1}"},
+                {"DebugStyleOverride", "DEBUG: StyleOverride: {0}"},
+                {"ErrorSettingCamera", "Error setting camera view for {0}: {1}"}
+            };
+
+            // Polish translations
+            translations["Polish"] = new Dictionary<string, string>
+            {
+                {"MainFormTitle", "mca64Inventor"},
+                {"FontSizeLabel", "Rozmiar czcionki:"},
+                {"ClosePartsCheckbox", "Zamykaj części po grawerowaniu"},
+                {"EngraveButton", "Graweruj"},
+                {"ThumbnailsButton", "Miniatury"},
+                {"PartNameColumn", "Nazwa części"},
+                {"PreviewColumn", "Podgląd"},
+                {"EngravingColumn", "mca64"},
+                {"NewEngravingColumn", "Nowe grawerowanie"},
+                {"Error", "Błąd"}, // Generic error title for MessageBox
+                {"ErrorInventorNotRunning", "Nie można uzyskać referencji do Inventora!"},
+                {"ErrorOpenAssembly", "Otwórz dokument złożenia przed uruchomieniem skryptu!"},
+                {"ErrorNotAssembly", "Aktywny dokument nie jest dokumentem złożenia!"},
+                {"ErrorSaveAssembly", "Zapisz dokument złożenia przed uruchomieniem skryptu!"},
+                {"LogFontSizeSaved", "[USTAWIENIA] Zapisano rozmiar czcionki przy zamykaniu okna: {0}"},
+                {"LogFontSizeInvalid", "[USTAWIENIA] Niepoprawny format rozmiaru czcionki przy zamykaniu okna. Ustawiono domyślnie 1.0"},
+                {"LogClosePartsSaved", "[USTAWIENIA] Zapisano zamykanie części: {0}"},
+                {"LogThumbnailsGenerated", "Miniatury zostały wygenerowane (jeśli to możliwe)"},
+                {"LogErrorLoadingParts", "Błąd ładowania listy części: {0}"},
+                {"LogErrorGeneratingThumbnails", "Błąd generowania miniatur: {0}"},
+                {"ErrorOpeningPartForEngraving", "Błąd otwierania części do grawerowania: {0} - {1}"},
+                {"ErrorPartNoComponentDefinition", "Błąd: Część '{0}' nie ma prawidłowej definicji komponentu."},
+                {"ErrorPartFewerThan3WorkPlanes", "Błąd: Część '{0}' ma mniej niż 3 płaszczyzny robocze."},
+                {"ErrorCouldNotCreateSketch", "Błąd: Nie można utworzyć szkicu na płaszczyźnie roboczej {0} dla części '{1}'."},
+                {"ErrorCouldNotCreateTextBox", "Błąd: Nie można utworzyć pola tekstowego dla części '{0}'."},
+                {"ErrorCouldNotCreateProfile", "Błąd: Nie można utworzyć profilu dla części '{0}'."},
+                {"ErrorCouldNotCreateExtrusion", "Błąd: Nie można utworzyć wyciągnięcia dla części '{0}'."},
+                {"LogWrongSketchPlane", "Błędna płaszczyzna szkicu! Ponowna próba z inną płaszczyzną."},
+                {"LogEngravedParts", "Wygrawerowane części:"},
+                {"LogErrorClosingPart", "Błąd zamykania części: {0} - {1}"},
+                {"LogErrorReturningToAssembly", "Błąd podczas powrotu do zakładki ze złożeniem: {0}"},
+                {"LogFontSizeUsed", "[GRAWEROWANIE] Użyto rozmiaru czcionki z comboBoxFontSize: {0}"},
+                {"TooltipEngraveButton", "Uruchamia formularz grawerowania."},
+                {"DescriptionEngraveButton", "Przycisk do grawerowania"},
+                {"ErrorInventorNotRunningMsgBox", "Nie można uzyskać referencji do Inventora!"},
+                {"ErrorOpenAssemblyMsgBox", "Otwórz dokument złożenia przed uruchomieniem skryptu!"},
+                {"ErrorNotAssemblyMsgBox", "Aktywny dokument nie jest dokumentem złożenia!"},
+                {"ErrorSaveAssemblyMsgBox", "Zapisz dokument złożenia przed uruchomieniem skryptu!"},
+                {"ErrorUnexpected", "Wystąpił nieoczekiwany błąd. \nSzczegóły zostały zapisane w pliku dziennika znajdującym się pod adresem:\n{0}"},
+                {"ErrorAssemblyMissingComponentDefinition", "Aktywne złożenie nie posiada definicji komponentu i nie może być przetworzone."},
+                {"ErrorFileDoesNotExist", "Plik nie istnieje: {0}"},
+                {"ErrorOpeningPart", "Błąd otwierania części: {0} - {1}"},
+                {"ErrorGeneratingThumbnail", "Błąd generowania miniatury dla: {0} - {1}"},
+                {"ErrorSettingUserProperty", "Błąd ustawiania właściwości użytkownika dla '{0}': {1}"},
+                {"DebugStyleOverride", "DEBUG: StyleOverride: {0}"},
+                {"ErrorSettingCamera", "Błąd ustawiania widoku kamery dla {0}: {1}"}
+            };
+
+            // Set default language based on OS culture
+            if (CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "pl")
+            {
+                currentLanguage = Language.Polish;
+            }
+            else
+            {
+                currentLanguage = Language.English;
+            }
+        }
+
+        public static string GetTranslation(string key, params object[] args)
+        {
+            if (translations.ContainsKey(currentLanguage.ToString()) && translations[currentLanguage.ToString()].ContainsKey(key))
+            {
+                return string.Format(translations[currentLanguage.ToString()][key], args);
+            }
+            // Fallback to English if translation not found
+            if (translations["English"].ContainsKey(key))
+            {
+                return string.Format(translations["English"][key], args);
+            }
+            return key; // Return key if no translation found
+        }
+
+        public static void SetLanguage(Language lang)
+        {
+            currentLanguage = lang;
+        }
+
+        public static Language GetCurrentLanguage()
+        {
+            return currentLanguage;
+        }
+    }
+
     public partial class MainForm : Form
     {
         private static Dictionary<string, int> fontIndexPerAssembly = new Dictionary<string, int>();
@@ -23,6 +174,7 @@ namespace mca64Inventor
         private static Dictionary<string, MainForm> openFormsPerAssembly = new Dictionary<string, MainForm>();
         private static Dictionary<string, bool> closePartsPerAssembly = new Dictionary<string, bool>();
         private string currentAssemblyPath = null;
+        private ComboBox comboBoxLanguage; // Added for language selection
 
         public float GlobalFontSize
         {
@@ -49,7 +201,8 @@ namespace mca64Inventor
         {
             InitializeComponent();
             AddFontComboBox();
-            PrepareDataGridView();
+            PrepareDataGridView(); // Moved before AddLanguageComboBox
+            AddLanguageComboBox(); // Added language combobox
             // Dodaj obsługę comboBoxFontSize
             if (this.Controls["comboBoxFontSize"] is ComboBox cbFontSize)
             {
@@ -89,6 +242,7 @@ namespace mca64Inventor
             dataGridViewParts.EditingControlShowing += DataGridViewParts_EditingControlShowing;
             comboBoxFonts.SelectedIndexChanged += ComboBoxFonts_SelectedIndexChanged;
             this.FormClosing += MainForm_FormClosing;
+            UpdateUIStrings(); // Update UI strings after initialization
         }
 
         public MainForm(string assemblyPath) : this()
@@ -148,13 +302,13 @@ namespace mca64Inventor
                 if (cb.SelectedItem is string selected && float.TryParse(selected.Replace(',', '.'), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float parsed) && parsed > 0)
                 {
                     Properties.Settings.Default.FontSize = parsed;
-                    LogMessage($"[USTAWIENIA] Zapisano rozmiar czcionki przy zamykaniu okna: {parsed}");
+                    LogMessage(TranslationManager.GetTranslation("LogFontSizeSaved", parsed));
                 }
                 else
                 {
                     cb.SelectedIndex = 0;
                     Properties.Settings.Default.FontSize = 1.0f;
-                    LogMessage("[USTAWIENIA] Niepoprawny format rozmiaru czcionki przy zamykaniu okna. Ustawiono domyślnie 1.0");
+                    LogMessage(TranslationManager.GetTranslation("LogFontSizeInvalid"));
                 }
             }
             // Zapisz ustawienie zamykania części
@@ -164,10 +318,34 @@ namespace mca64Inventor
                 if (!string.IsNullOrEmpty(currentAssemblyPath))
                 {
                     closePartsPerAssembly[currentAssemblyPath] = cbClose.Checked;
-                    // Zapisz indywidualnie dla złożenia
-                    Properties.Settings.Default["ClosePartsAfterEngraving_" + currentAssemblyPath] = cbClose.Checked;
+
+                    // Poprawiona logika zapisu indywidualnego dla złożenia
+                    string settingName = "ClosePartsAfterEngraving_" + currentAssemblyPath.Replace("\\", "_").Replace(":", "");
+                    bool settingExists = false;
+                    foreach (SettingsProperty property in Properties.Settings.Default.Properties)
+                    {
+                        if (property.Name == settingName)
+                        {
+                            settingExists = true;
+                            break;
+                        }
+                    }
+
+                    if (!settingExists)
+                    {
+                        // Utwórz nowe ustawienie, jeśli nie istnieje
+                        SettingsProperty newSetting = new SettingsProperty(settingName);
+                        newSetting.PropertyType = typeof(bool);
+                        newSetting.DefaultValue = false;
+                        newSetting.Provider = Properties.Settings.Default.Providers["LocalFileSettingsProvider"];
+                        newSetting.Attributes.Add(typeof(System.Configuration.UserScopedSettingAttribute), new System.Configuration.UserScopedSettingAttribute());
+                        Properties.Settings.Default.Properties.Add(newSetting);
+                        Properties.Settings.Default.Reload(); // Przeładuj, aby nowe ustawienie było dostępne
+                    }
+
+                    Properties.Settings.Default[settingName] = cbClose.Checked;
                 }
-                LogMessage($"[USTAWIENIA] Zapisano zamykanie części: {cbClose.Checked}");
+                LogMessage(TranslationManager.GetTranslation("LogClosePartsSaved", cbClose.Checked));
             }
             Properties.Settings.Default.Save();
         }
@@ -177,21 +355,21 @@ namespace mca64Inventor
             dataGridViewParts.Columns.Clear();
             dataGridViewParts.RowTemplate.Height = 64;
             dataGridViewParts.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-            dataGridViewParts.Columns.Add("PartName", "Part name");
+            dataGridViewParts.Columns.Add("PartName", TranslationManager.GetTranslation("PartNameColumn"));
             var imageCol = new DataGridViewImageColumn();
             imageCol.Name = "Preview";
-            imageCol.HeaderText = "Preview";
+            imageCol.HeaderText = TranslationManager.GetTranslation("PreviewColumn");
             imageCol.ImageLayout = DataGridViewImageCellLayout.Zoom;
             dataGridViewParts.Columns.Add(imageCol);
             var grawerCol = new DataGridViewTextBoxColumn();
             grawerCol.Name = "Grawer";
-            grawerCol.HeaderText = "Engraving";
+            grawerCol.HeaderText = TranslationManager.GetTranslation("EngravingColumn");
             grawerCol.ReadOnly = true;
             dataGridViewParts.Columns.Add(grawerCol);
             // Column for editing engraving as DataGridViewTextBoxColumn
             var editCol = new DataGridViewTextBoxColumn();
             editCol.Name = "EditGrawer";
-            editCol.HeaderText = "New Engraving";
+            editCol.HeaderText = TranslationManager.GetTranslation("NewEngravingColumn");
             editCol.ReadOnly = false;
             dataGridViewParts.Columns.Add(editCol);
             // Removed button from row
@@ -244,6 +422,64 @@ namespace mca64Inventor
                 this.Controls.Add(comboBoxFontSize);
                 comboBoxFontSize.BringToFront();
             }
+        }
+
+        private void AddLanguageComboBox()
+        {
+            comboBoxLanguage = new ComboBox();
+            comboBoxLanguage.DropDownStyle = ComboBoxStyle.DropDownList;
+            comboBoxLanguage.Location = new System.Drawing.Point(10, 10); // Top-left
+            comboBoxLanguage.Width = 100;
+            comboBoxLanguage.Name = "comboBoxLanguage";
+            comboBoxLanguage.Anchor = AnchorStyles.Top | AnchorStyles.Left;
+            comboBoxLanguage.Items.Add("English");
+            comboBoxLanguage.Items.Add("Polski");
+            // Temporarily unsubscribe to prevent premature UpdateUIStrings call
+            comboBoxLanguage.SelectedIndexChanged -= ComboBoxLanguage_SelectedIndexChanged;
+
+            if (TranslationManager.GetCurrentLanguage() == TranslationManager.Language.Polish)
+            {
+                comboBoxLanguage.SelectedItem = "Polski";
+            }
+            else
+            {
+                comboBoxLanguage.SelectedItem = "English";
+            }
+
+            // Re-subscribe after setting the selected item
+            comboBoxLanguage.SelectedIndexChanged += ComboBoxLanguage_SelectedIndexChanged;
+
+            this.Controls.Add(comboBoxLanguage);
+            comboBoxLanguage.BringToFront();
+        }
+
+        private void ComboBoxLanguage_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (comboBoxLanguage.SelectedItem.ToString() == "Polski")
+            {
+                TranslationManager.SetLanguage(TranslationManager.Language.Polish);
+            }
+            else
+            {
+                TranslationManager.SetLanguage(TranslationManager.Language.English);
+            }
+            UpdateUIStrings();
+        }
+
+        private void UpdateUIStrings()
+        {
+            Version assemblyVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+            string versionString = $"v{assemblyVersion.Major}.{assemblyVersion.Minor}.{assemblyVersion.Build}.{assemblyVersion.Revision}";
+            this.Text = TranslationManager.GetTranslation("MainFormTitle") + " " + versionString;
+            labelFontSize.Text = TranslationManager.GetTranslation("FontSizeLabel");
+            checkBoxCloseParts.Text = TranslationManager.GetTranslation("ClosePartsCheckbox");
+            buttonGrawerowanie.Text = TranslationManager.GetTranslation("EngraveButton");
+            buttonGenerateThumbnails.Text = TranslationManager.GetTranslation("ThumbnailsButton");
+
+            dataGridViewParts.Columns["PartName"].HeaderText = TranslationManager.GetTranslation("PartNameColumn");
+            dataGridViewParts.Columns["Preview"].HeaderText = TranslationManager.GetTranslation("PreviewColumn");
+            dataGridViewParts.Columns["Grawer"].HeaderText = TranslationManager.GetTranslation("EngravingColumn");
+            dataGridViewParts.Columns["EditGrawer"].HeaderText = TranslationManager.GetTranslation("NewEngravingColumn");
         }
 
         private void ComboBoxFonts_SelectedIndexChanged(object sender, EventArgs e)
@@ -344,12 +580,28 @@ namespace mca64Inventor
                 {
                     // If thumbnail is null, set empty bitmap 1x1 to avoid display error
                     var img = czesc.Miniatura ?? new Bitmap(1, 1);
-                    dataGridViewParts.Rows.Add(czesc.Nazwa, img, czesc.Grawer, czesc.Grawer);
+                    dataGridViewParts.Rows.Add(czesc.Nazwa, img, czesc.Grawer, "");
+                }
+                LogMessage(TranslationManager.GetTranslation("LogThumbnailsGenerated"));
+                // After generating thumbnails, save them to memory for the given assembly
+                if (!string.IsNullOrEmpty(currentAssemblyPath))
+                {
+                    var miniatury = new List<(string, Image, string)>();
+                    foreach (DataGridViewRow row in dataGridViewParts.Rows)
+                    {
+                        if (row.Cells[0].Value != null)
+                        {
+                            Image originalImage = row.Cells[1].Value as Image;
+                            Image clonedImage = originalImage != null ? (Image)originalImage.Clone() : new Bitmap(1, 1);
+                            miniatury.Add((row.Cells[0].Value.ToString(), clonedImage, row.Cells[2].Value?.ToString()));
+                        }
+                    }
+                    miniaturyPerAssembly[currentAssemblyPath] = miniatury;
                 }
             }
             catch (Exception ex)
             {
-                LogMessage($"Error loading parts list: {ex.Message}");
+                LogMessage(TranslationManager.GetTranslation("LogErrorLoadingParts", ex.Message));
             }
         }
 
@@ -371,7 +623,7 @@ namespace mca64Inventor
                     var img = czesc.Miniatura ?? new Bitmap(1, 1);
                     dataGridViewParts.Rows.Add(czesc.Nazwa, img, czesc.Grawer, "");
                 }
-                LogMessage("Thumbnails have been generated (if possible)");
+                LogMessage(TranslationManager.GetTranslation("LogThumbnailsGenerated"));
                 // After generating thumbnails, save them to memory for the given assembly
                 if (!string.IsNullOrEmpty(currentAssemblyPath))
                 {
@@ -390,7 +642,7 @@ namespace mca64Inventor
             }
             catch (Exception ex)
             {
-                LogMessage($"Error generating thumbnails: {ex.Message}");
+                LogMessage(TranslationManager.GetTranslation("LogErrorGeneratingThumbnails", ex.Message));
             }
             finally
             {
@@ -431,20 +683,20 @@ namespace mca64Inventor
             var aplikacja = System.Runtime.InteropServices.Marshal.GetActiveObject("Inventor.Application") as Inventor.Application;
             if (aplikacja == null)
             {
-                MessageBox.Show("Cannot get reference to Inventor!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                LogMessage("Cannot get reference to Inventor!");
+                MessageBox.Show(TranslationManager.GetTranslation("ErrorInventorNotRunningMsgBox"), TranslationManager.GetTranslation("Error"), MessageBoxButtons.OK, MessageBoxIcon.Error);
+                LogMessage(TranslationManager.GetTranslation("ErrorInventorNotRunning"));
                 return;
             }
             if (aplikacja.ActiveDocument == null)
             {
-                MessageBox.Show("Open an assembly document before running the script!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                LogMessage("Open an assembly document before running the script!");
+                MessageBox.Show(TranslationManager.GetTranslation("ErrorOpenAssemblyMsgBox"), TranslationManager.GetTranslation("Error"), MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                LogMessage(TranslationManager.GetTranslation("ErrorOpenAssembly"));
                 return;
             }
             if (!(aplikacja.ActiveDocument is AssemblyDocument dokumentZespolu))
             {
-                MessageBox.Show("The active document is not an assembly document!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                LogMessage("The active document is not an assembly document!");
+                MessageBox.Show(TranslationManager.GetTranslation("ErrorNotAssemblyMsgBox"), TranslationManager.GetTranslation("Error"), MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                LogMessage(TranslationManager.GetTranslation("ErrorNotAssembly"));
                 return;
             }
 

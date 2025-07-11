@@ -10,7 +10,7 @@ namespace mca64Inventor
         private System.Windows.Forms.ComboBox comboBoxFontSize;
         private System.Windows.Forms.TextBox textBoxLog;
         private System.Windows.Forms.CheckBox checkBoxCloseParts;
-        private System.Windows.Forms.CheckBox checkBoxGenerateThumbnails;
+        
         private System.Windows.Forms.ComboBox comboBoxFonts;
 
         protected override void Dispose(bool disposing)
